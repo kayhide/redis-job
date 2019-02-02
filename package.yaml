@@ -32,6 +32,9 @@ dependencies:
   - unliftio-core
   - unordered-containers
   - vector
+  - hedis
+  - aeson
+  - lens
 
 default-extensions:
   - AutoDeriveTypeable
