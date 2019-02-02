@@ -1,0 +1,10 @@
+version: '3.2'
+services:
+  db:
+    image: postgres:10.5-alpine
+    ports:
+      - 5432
+  redis:
+    image: redis:5.0-alpine
+    ports:
+      - 6379
