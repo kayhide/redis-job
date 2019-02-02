@@ -1,5 +1,5 @@
 class PredictorsController < ApplicationController
-  before_action :set_predictor, only: [:show, :edit, :update, :destroy]
+  before_action :set_predictor, only: %i[show edit update destroy start_train]
 
   # GET /predictors
   # GET /predictors.json
@@ -61,10 +61,15 @@ class PredictorsController < ApplicationController
     end
   end
 
+  def start_train
+    TrainJob.perform_later @predictor
+    redirect_to predictors_url, notice: 'Train job is submitted.'
+  end
+
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_predictor
-      @predictor = Predictor.find(params[:id])
+      @predictor = Predictor.find(params[:id] || params[:predictor_id])
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.

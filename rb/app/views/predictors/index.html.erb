@@ -5,10 +5,9 @@
 <table>
   <thead>
     <tr>
-      <th>Training set</th>
-      <th>Train net</th>
-      <th>Test set</th>
-      <th>Predict net</th>
+      <th>ID</th>
+      <th>Trained at</th>
+      <th>Tested at</th>
       <th colspan="3"></th>
     </tr>
   </thead>
@@ -16,12 +15,10 @@
   <tbody>
     <% @predictors.each do |predictor| %>
       <tr>
-        <td><%= predictor.training_set %></td>
-        <td><%= predictor.train_net %></td>
-        <td><%= predictor.test_set %></td>
-        <td><%= predictor.predict_net %></td>
-        <td><%= link_to 'Show', predictor %></td>
-        <td><%= link_to 'Edit', edit_predictor_path(predictor) %></td>
+        <td>#<%= predictor.id %></td>
+        <td><%= predictor.trained_at %></td>
+        <td><%= predictor.tested_at %></td>
+        <td><%= link_to 'Train', predictor_start_train_path(predictor), method: :post %></td>
         <td><%= link_to 'Destroy', predictor, method: :delete, data: { confirm: 'Are you sure?' } %></td>
       </tr>
     <% end %>
