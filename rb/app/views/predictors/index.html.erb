@@ -1,0 +1,33 @@
+<p id="notice"><%= notice %></p>
+
+<h1>Predictors</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Training set</th>
+      <th>Train net</th>
+      <th>Test set</th>
+      <th>Predict net</th>
+      <th colspan="3"></th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% @predictors.each do |predictor| %>
+      <tr>
+        <td><%= predictor.training_set %></td>
+        <td><%= predictor.train_net %></td>
+        <td><%= predictor.test_set %></td>
+        <td><%= predictor.predict_net %></td>
+        <td><%= link_to 'Show', predictor %></td>
+        <td><%= link_to 'Edit', edit_predictor_path(predictor) %></td>
+        <td><%= link_to 'Destroy', predictor, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<br>
+
+<%= link_to 'New Predictor', new_predictor_path %>

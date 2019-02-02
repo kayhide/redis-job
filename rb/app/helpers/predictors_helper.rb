@@ -1,0 +1,2 @@
+module PredictorsHelper
+end

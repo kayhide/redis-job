@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  training_set: MyText
+  train_net: MyText
+  test_set: MyText
+  predict_net: MyText
+
+two:
+  training_set: MyText
+  train_net: MyText
+  test_set: MyText
+  predict_net: MyText
