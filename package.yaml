@@ -1,0 +1,82 @@
+name:                redis-job
+version:             0.1.0.0
+#synopsis:
+#description:
+homepage:            https://github.com/kayhide/redis-job
+license:             BSD3
+author:              Hideaki KAWAI
+maintainer:          kayhide@gmail.com
+copyright:           kayhide
+category:            Web
+extra-source-files:
+  - README.md
+
+dependencies:
+  - async
+  - base
+  - bytestring
+  - classy-prelude
+  - containers
+  - deepseq
+  - directory
+  - exceptions
+  - filepath
+  - mtl
+  - primitive
+  - stm
+  - text
+  - time
+  - transformers
+  - typed-process
+  - unliftio
+  - unliftio-core
+  - unordered-containers
+  - vector
+
+default-extensions:
+  - AutoDeriveTypeable
+  - BangPatterns
+  - BinaryLiterals
+  - ConstraintKinds
+  - DataKinds
+  - DefaultSignatures
+  - DeriveAnyClass
+  - DeriveDataTypeable
+  - DeriveFoldable
+  - DeriveFunctor
+  - DeriveGeneric
+  - DeriveTraversable
+  - DoAndIfThenElse
+  - EmptyDataDecls
+  - ExistentialQuantification
+  - FlexibleContexts
+  - FlexibleInstances
+  - FunctionalDependencies
+  - GADTs
+  - GeneralizedNewtypeDeriving
+  - InstanceSigs
+  - KindSignatures
+  - LambdaCase
+  - MultiParamTypeClasses
+  - MultiWayIf
+  - NamedFieldPuns
+  - NoImplicitPrelude
+  - OverloadedLists
+  - OverloadedStrings
+  - PartialTypeSignatures
+  - PatternGuards
+  - PolyKinds
+  - RankNTypes
+  - RecordWildCards
+  - ScopedTypeVariables
+  - StandaloneDeriving
+  - TupleSections
+  - TypeApplications
+  - TypeFamilies
+  - TypeSynonymInstances
+  - ViewPatterns
+
+executables:
+  redis-job:
+    source-dirs:      src
+    main:             Main.hs
