@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveAnyClass         #-}
 {-# LANGUAGE DerivingStrategies     #-}
 {-# LANGUAGE TypeFamilyDependencies #-}
 {-# LANGUAGE UndecidableInstances   #-}

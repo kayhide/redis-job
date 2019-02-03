@@ -6,12 +6,17 @@ import           ClassyPrelude
 import           Control.Lens         ((^.))
 import           Control.Monad.Reader
 import qualified Data.Aeson           as Aeson
+import           Database.Persist
+import           Database.Persist.Sql
 import           Database.Redis
 import           System.Environment
 
 import           Config
 import           Config.AppConfig
+import           Config.DbConfig
 import           Config.RedisConfig
+import           Model.Entities
+import           Model.Predictor
 import           TrainJob
 
 run :: IO ()
@@ -22,6 +27,7 @@ run = do
   print config
 
   runReaderT listJobs config
+  runReaderT listPredictors config
 
 
 
@@ -39,3 +45,14 @@ listJobs = do
 
     print jobs
 
+
+
+listPredictors :: (MonadReader AppConfig m, MonadIO m, MonadUnliftIO m) => m ()
+listPredictors = do
+  pool' <- asks (^. running . db . pool)
+  predictors <-
+    flip runSqlPool pool' $ do
+    predictors :: [Entity Predictor] <- selectList [] []
+    pure predictors
+
+  traverse_ print predictors
