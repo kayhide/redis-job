@@ -1,8 +1,7 @@
-{-# LANGUAGE DeriveAnyClass         #-}
 {-# LANGUAGE DerivingStrategies     #-}
 {-# LANGUAGE TypeFamilyDependencies #-}
 {-# LANGUAGE UndecidableInstances   #-}
-module TrainJob where
+module Plugin.Sidekiq.Job where
 
 import           ClassyPrelude
 
@@ -40,7 +39,7 @@ import           Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 -- * Abstract Job
 
 class Job a where
-  type Args a  = args | args -> a
+  type Args a  = r | r -> a
   perform :: Args a -> IO ()
 
 data JobArgs a = JobArgs
@@ -68,7 +67,6 @@ instance FromJSON (Args a) => FromJSON (JobArgs a) where
     <*> o .: "executions"
     <*> o .: "locale"
 
-
 data JobWrapper a = JobWrapper
   { _class       :: Text
   , _wrapped     :: Text
@@ -93,17 +91,3 @@ instance FromJSON (Args a) => FromJSON (JobWrapper a) where
     <*> o .: "jid"
     <*> (posixSecondsToUTCTime <$> o .: "created_at")
     <*> (posixSecondsToUTCTime <$> o .: "enqueued_at")
-
-
--- * Concrete Job
-
-data TrainJob
-
-data TrainJobArgs = TrainJobArgs { _aj_globalid :: Text }
-  deriving (Eq, Show, Generic)
-  deriving (FromJSON)
-
-instance Job TrainJob where
-  type Args TrainJob = TrainJobArgs
-  perform args = do
-    print "Performing TrainJob"

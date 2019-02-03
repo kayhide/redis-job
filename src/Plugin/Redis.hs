@@ -3,7 +3,7 @@ module Plugin.Redis where
 import           ClassyPrelude
 
 import           Control.Lens        ((^.))
-import qualified Database.Redis      as Redis
+import           Database.Redis      as Redis
 
 import           Plugin.Redis.Config
 
@@ -15,3 +15,7 @@ run
 run redis = do
   conn' <- asks (^. running . conn)
   liftIO $ Redis.runRedis conn' redis
+
+brpop :: (RedisCtx m f)
+      => [ByteString] -> Integer -> m (f (Maybe (ByteString, ByteString)))
+brpop = Redis.brpop
