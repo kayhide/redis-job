@@ -36,7 +36,7 @@ app = do
       Redis.brpop [encodeUtf8 queue] 1 >>= \case
         Left _ -> fail "Failed to read queue"
         Right x' -> case x' of
-          Nothing -> print x'
+          Nothing -> pure ()
           Just (queue', x'') -> do
             putStrLn $ "Fetched from queue: " <> decodeUtf8 queue'
             case (Aeson.eitherDecode . fromStrict) x'' of

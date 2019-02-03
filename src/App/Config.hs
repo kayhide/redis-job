@@ -4,31 +4,34 @@ module App.Config where
 
 import           ClassyPrelude
 
-import           Control.Lens        ((^.))
+import           Control.Lens          ((^.))
 import           Control.Lens.TH
 
 import           Configurable
-import qualified Plugin.Db.Config    as Db
-import qualified Plugin.Redis.Config as Redis
+import qualified Plugin.Db.Config      as Db
+import qualified Plugin.Redis.Config   as Redis
+import qualified Plugin.Sidekiq.Config as Sidekiq
 
 
 data AppConfig = AppConfig
   { _setting :: AppSetting
   , _running :: AppRunning
   }
-  deriving (Eq, Show)
+  deriving (Show)
 
 data AppSetting = AppSetting
-  { _redis :: Redis.RedisSetting
-  , _db    :: Db.DbSetting
+  { _redis   :: Redis.RedisSetting
+  , _db      :: Db.DbSetting
+  , _sidekiq :: Sidekiq.SidekiqSetting
   }
   deriving (Eq, Show)
 
 data AppRunning = AppRunning
-  { _redis :: Redis.RedisRunning
-  , _db    :: Db.DbRunning
+  { _redis   :: Redis.RedisRunning
+  , _db      :: Db.DbRunning
+  , _sidekiq :: Sidekiq.SidekiqRunning
   }
-  deriving (Eq, Show)
+  deriving (Show)
 
 $(makeFieldsNoPrefix ''AppConfig)
 $(makeFieldsNoPrefix ''AppSetting)
@@ -42,11 +45,13 @@ instance Configurable AppConfig where
     AppSetting
     <$> ready
     <*> ready
+    <*> ready
 
   start setting' =
     AppRunning
     <$> start (setting' ^. redis)
     <*> start (setting' ^. db)
+    <*> start (setting' ^. sidekiq)
 
 
 instance Db.HasConfig AppConfig where
@@ -56,3 +61,7 @@ instance Db.HasConfig AppConfig where
 instance Redis.HasConfig AppConfig where
   setting = setting . redis
   running = running . redis
+
+instance Sidekiq.HasConfig AppConfig where
+  setting = setting . sidekiq
+  running = running . sidekiq

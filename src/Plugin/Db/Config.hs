@@ -9,9 +9,8 @@ import           Control.Lens.TH             (makeFieldsNoPrefix)
 import           Control.Monad.Logger
 import           Data.Pool                   (Pool)
 import           Database.Persist.Postgresql
-import           System.Environment          (lookupEnv)
 
-import           Configurable
+import           Configurable                (Configurable (..), fetchSetting)
 
 
 data DbConfig
@@ -29,13 +28,10 @@ data DbRunning = DbRunning
   { _pool :: Pool SqlBackend
   }
 
-instance Eq DbRunning where
-  (==) _ _ = False
-
 instance Show DbRunning where
   show (DbRunning _) =
     "DbRunning "
-    <> "{_pool = = Pool {...}"
+    <> "{_pool = Pool {...}"
     <> "}"
 
 $(makeFieldsNoPrefix ''DbRunning)
@@ -49,11 +45,11 @@ instance Configurable DbConfig where
 
   ready =
     DbSetting
-    <$> (pack . fromMaybe "localhost" <$> lookupEnv "DB_HOST")
-    <*> (pack . fromMaybe "5432" <$> lookupEnv "DB_PORT")
-    <*> (pack . fromMaybe "database" <$> lookupEnv "DB_DATABASE")
-    <*> (pack . fromMaybe "postgres" <$> lookupEnv "DB_USER")
-    <*> (fromMaybe 5 . (readMay =<<) <$> lookupEnv "DB_POOL")
+    <$> fetchSetting "DB_HOST" "localhost"
+    <*> fetchSetting "DB_PORT" "5432"
+    <*> fetchSetting "DB_DATABASE" "database"
+    <*> fetchSetting "DB_USER" "postgres"
+    <*> fetchSetting "DB_POOL" 5
 
   start (DbSetting host' port' database' user' pool') = do
     let connstr =
