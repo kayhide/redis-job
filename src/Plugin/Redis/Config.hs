@@ -1,9 +1,9 @@
 {-# LANGUAGE TemplateHaskell #-}
-module Config.RedisConfig where
+module Plugin.Redis.Config where
 
 import           ClassyPrelude
 
-import           Control.Lens       ((^.))
+import           Control.Lens       (Lens')
 import           Control.Lens.TH    (makeFieldsNoPrefix)
 import           Database.Redis     (ConnectInfo, Connection, checkedConnect,
                                      parseConnectInfo)
@@ -44,15 +44,20 @@ instance Configurable RedisConfig where
   type Setting RedisConfig = RedisSetting
   type Running RedisConfig = RedisRunning
 
-  build =
+  ready =
     RedisSetting
     <$> (pack . fromMaybe "localhost" <$> lookupEnv "REDIS_HOST")
     <*> (pack . fromMaybe "6379" <$> lookupEnv "REDIS_PORT")
 
-  boot setting =
+  activate (RedisSetting host' port') =
     case parseConnectInfo (unpack url') of
       Left err -> fail $ pack err
       Right info' ->
         RedisRunning info' <$> checkedConnect info'
     where
-      url' = "redis://" <> setting ^. host <> ":" <> setting ^. port
+      url' = "redis://" <> host' <> ":" <> port'
+
+
+class HasConfig env where
+  setting :: Lens' env RedisSetting
+  running :: Lens' env RedisRunning

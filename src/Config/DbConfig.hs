@@ -46,7 +46,7 @@ instance Configurable DbConfig where
   type Setting DbConfig = DbSetting
   type Running DbConfig = DbRunning
 
-  build =
+  ready =
     DbSetting
     <$> (pack . fromMaybe "localhost" <$> lookupEnv "DB_HOST")
     <*> (pack . fromMaybe "5432" <$> lookupEnv "DB_PORT")
@@ -54,7 +54,7 @@ instance Configurable DbConfig where
     <*> (pack . fromMaybe "postgres" <$> lookupEnv "DB_USER")
     <*> (fromMaybe 5 . (readMay =<<) <$> lookupEnv "DB_POOL")
 
-  boot (DbSetting host' port' database' user' pool') = do
+  activate (DbSetting host' port' database' user' pool') = do
     let connstr =
           "host=" <> host'
           <> " dbname=" <> database'

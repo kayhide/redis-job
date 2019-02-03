@@ -4,12 +4,12 @@ module Config.AppConfig where
 
 import           ClassyPrelude
 
-import           Control.Lens       ((^.))
+import           Control.Lens        ((^.))
 import           Control.Lens.TH
 
 import           Config
 import           Config.DbConfig
-import           Config.RedisConfig
+import qualified Plugin.Redis.Config as Redis
 
 
 data AppConfig = AppConfig
@@ -19,13 +19,13 @@ data AppConfig = AppConfig
   deriving (Eq, Show)
 
 data AppSetting = AppSetting
-  { _redis :: RedisSetting
+  { _redis :: Redis.RedisSetting
   , _db    :: DbSetting
   }
   deriving (Eq, Show)
 
 data AppRunning = AppRunning
-  { _redis :: RedisRunning
+  { _redis :: Redis.RedisRunning
   , _db    :: DbRunning
   }
   deriving (Eq, Show)
@@ -38,12 +38,17 @@ instance Configurable AppConfig where
   type Setting AppConfig = AppSetting
   type Running AppConfig = AppRunning
 
-  build =
+  ready =
     AppSetting
-    <$> build
-    <*> build
+    <$> ready
+    <*> ready
 
-  boot setting' =
+  activate setting' =
     AppRunning
-    <$> boot (setting' ^. redis)
-    <*> boot (setting' ^. db)
+    <$> activate (setting' ^. redis)
+    <*> activate (setting' ^. db)
+
+
+instance Redis.HasConfig AppConfig where
+  setting = setting . redis
+  running = running . redis
