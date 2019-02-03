@@ -11,6 +11,6 @@ This demonstrates:
 - Connect to Redis server
 - Read Jobs from Redis server
 - Abstract Job datatype along with its arguments
-- Run background worker (wip)
+- Run background worker
 - Support retrying (wip)
 
