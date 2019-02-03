@@ -9,7 +9,7 @@ import           Database.Redis     (ConnectInfo, Connection, checkedConnect,
                                      parseConnectInfo)
 import           System.Environment (lookupEnv)
 
-import           Config
+import           Configurable             (Configurable (..))
 
 
 data RedisConfig

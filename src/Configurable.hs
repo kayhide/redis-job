@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeFamilyDependencies #-}
-module Config where
+module Configurable where
 
 import           ClassyPrelude
 

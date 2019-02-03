@@ -1,14 +1,14 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE TemplateHaskell       #-}
-module Config.AppConfig where
+module App.Config where
 
 import           ClassyPrelude
 
 import           Control.Lens        ((^.))
 import           Control.Lens.TH
 
-import           Config
-import           Config.DbConfig
+import           Configurable
+import qualified Plugin.Db.Config    as Db
 import qualified Plugin.Redis.Config as Redis
 
 
@@ -20,13 +20,13 @@ data AppConfig = AppConfig
 
 data AppSetting = AppSetting
   { _redis :: Redis.RedisSetting
-  , _db    :: DbSetting
+  , _db    :: Db.DbSetting
   }
   deriving (Eq, Show)
 
 data AppRunning = AppRunning
   { _redis :: Redis.RedisRunning
-  , _db    :: DbRunning
+  , _db    :: Db.DbRunning
   }
   deriving (Eq, Show)
 
@@ -48,6 +48,10 @@ instance Configurable AppConfig where
     <$> activate (setting' ^. redis)
     <*> activate (setting' ^. db)
 
+
+instance Db.HasConfig AppConfig where
+  setting = setting . db
+  running = running . db
 
 instance Redis.HasConfig AppConfig where
   setting = setting . redis

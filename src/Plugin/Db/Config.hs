@@ -1,26 +1,27 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE TemplateHaskell       #-}
-module Config.DbConfig where
+module Plugin.Db.Config where
 
 import           ClassyPrelude
 
+import           Control.Lens                (Lens')
 import           Control.Lens.TH             (makeFieldsNoPrefix)
 import           Control.Monad.Logger
 import           Data.Pool                   (Pool)
 import           Database.Persist.Postgresql
 import           System.Environment          (lookupEnv)
 
-import           Config
+import           Configurable
 
 
 data DbConfig
 
 data DbSetting = DbSetting
-  { _host :: Text
-  , _port :: Text
+  { _host     :: Text
+  , _port     :: Text
   , _database :: Text
-  , _user :: Text
-  , _pool :: Int
+  , _user     :: Text
+  , _pool     :: Int
   }
   deriving (Eq, Show)
 
@@ -63,3 +64,7 @@ instance Configurable DbConfig where
     pool'' <- runStdoutLoggingT $ createPostgresqlPool (encodeUtf8 connstr) pool'
     pure $ DbRunning pool''
 
+
+class HasConfig env where
+  setting :: Lens' env DbSetting
+  running :: Lens' env DbRunning
