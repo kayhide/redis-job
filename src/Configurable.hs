@@ -9,10 +9,10 @@ class Configurable a where
 
   ready :: IO (Setting a)
 
-  activate :: Setting a -> IO (Running a)
+  start :: Setting a -> IO (Running a)
 
-  start :: IO (Setting a, Running a)
-  start = do
+  activate :: IO (Setting a, Running a)
+  activate = do
     setting' <- ready
-    running' <- activate setting'
+    running' <- start setting'
     pure (setting', running')

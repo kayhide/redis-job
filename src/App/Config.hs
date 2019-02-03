@@ -43,10 +43,10 @@ instance Configurable AppConfig where
     <$> ready
     <*> ready
 
-  activate setting' =
+  start setting' =
     AppRunning
-    <$> activate (setting' ^. redis)
-    <*> activate (setting' ^. db)
+    <$> start (setting' ^. redis)
+    <*> start (setting' ^. db)
 
 
 instance Db.HasConfig AppConfig where

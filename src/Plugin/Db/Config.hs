@@ -55,7 +55,7 @@ instance Configurable DbConfig where
     <*> (pack . fromMaybe "postgres" <$> lookupEnv "DB_USER")
     <*> (fromMaybe 5 . (readMay =<<) <$> lookupEnv "DB_POOL")
 
-  activate (DbSetting host' port' database' user' pool') = do
+  start (DbSetting host' port' database' user' pool') = do
     let connstr =
           "host=" <> host'
           <> " dbname=" <> database'

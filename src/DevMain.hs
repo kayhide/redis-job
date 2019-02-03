@@ -8,7 +8,7 @@ import           Database.Persist.Sql
 import           Database.Redis
 
 import           App.Config           (AppConfig (..))
-import           Configurable         (start)
+import           Configurable         (activate)
 import           Model.Entities
 import           Model.Predictor
 import qualified Plugin.Db            as Db
@@ -17,7 +17,7 @@ import           TrainJob
 
 run :: IO ()
 run = do
-  config <- uncurry AppConfig <$> start
+  config <- uncurry AppConfig <$> activate
   print config
   runReaderT app config
 

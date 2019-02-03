@@ -49,7 +49,7 @@ instance Configurable RedisConfig where
     <$> (pack . fromMaybe "localhost" <$> lookupEnv "REDIS_HOST")
     <*> (pack . fromMaybe "6379" <$> lookupEnv "REDIS_PORT")
 
-  activate (RedisSetting host' port') =
+  start (RedisSetting host' port') =
     case parseConnectInfo (unpack url') of
       Left err -> fail $ pack err
       Right info' ->
