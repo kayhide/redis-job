@@ -24,7 +24,8 @@ watch action = do
   namespace' <- asks (^. setting . namespace)
   let queue' = namespace' <> ":queue:default"
   jobs' <- asks (^. running . jobs)
-  putStrLn queue'
+  putStrLn "Listening to: "
+  putStrLn $ "  " <> queue'
   forever $ do
     x <- Redis.run $
       Redis.brpop [encodeUtf8 queue'] 1 >>= \case
