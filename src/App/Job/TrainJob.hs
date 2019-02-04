@@ -4,6 +4,7 @@ module App.Job.TrainJob where
 
 import           ClassyPrelude
 
+import           Control.Concurrent (threadDelay)
 import           Data.Aeson
 
 import           Plugin.Sidekiq.Job
@@ -45,5 +46,13 @@ data TrainJobArgs = TrainJobArgs { _aj_globalid :: Text }
 instance Job TrainJob where
   type Args TrainJob = TrainJobArgs
   perform args = do
-    putStrLn "Performing TrainJob: "
+    putStrLn "Starting TrainJob: "
     print args
+    threadDelay 1000000
+    putStrLn "Training..."
+    threadDelay 1000000
+    putStrLn "Still training..."
+    threadDelay 1000000
+    putStrLn "Almost done..."
+    threadDelay 1000000
+    putStrLn "Finished!"
