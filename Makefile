@@ -6,17 +6,17 @@ watch:
 	stack build --fast --file-watch
 .PHONY: watch
 
-server:
-	bundle exec rails server
-.PHONY: server
+web:
+	cd rb && bundle exec rails server
+.PHONY: web
 
 worker:
 	cd rb && bundle exec sidekiq -C config/sidekiq.yml
 .PHONY: worker
 
-docker-up:
+infra:
 	docker-compose up
-.PHONY: docker-up
+.PHONY: infra
 
 ports:
 	@echo "export DB_PORT=$$(docker port redis-job_db_1 | cut -d ':' -f 2)"
