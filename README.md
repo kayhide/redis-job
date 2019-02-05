@@ -35,11 +35,15 @@ The DB and Redis server would open some available localhost ports.
 
 Collect those ports and give them to env vars `DB_PORT` and `REDIS_PORT`.
 
-You can get them by:
+
+Including them, you can collect all necessary env vars by:
 
 ```
-$ make ports
+$ make envs
 ```
+
+The following steps assume these vars are set.
+
 
 ### 2. Start Rails web server
 
@@ -54,16 +58,37 @@ And move to `rb` dir, install dependent `gem`s, which are packages in Ruby.
 ```
 $ ruby --version
 ruby 2.5.3p105 (2018-10-18 revision 65156) [x86_64-darwin17]
-$ gem install bundler
+$ gem install bundler:1.17.1
 ...
 $ cd rb
 $ bundle
 ```
 
-For the first time, you need to setup database.
+When it fails saying:
 
 ```
-$ rails db:create db:migrate
+An error occurred while installing pg (1.1.4), and Bundler cannot continue.
+Make sure that `gem install pg -v '1.1.4' --source 'https://rubygems.org/'` succeeds before bundling.
+
+In Gemfile:
+  pg
+```
+
+it means `libpg` is not found on your system.
+
+To install it, do it by one of these commands:
+
+```sh
+$ brew install postgresql
+$ apt-get install libpq-dev
+$ yum install postgresql-devel
+
+```
+
+After successful `bundle`, you need to setup database.
+
+```
+$ bundle exec rails db:create db:migrate
 ```
 
 Now it is ready to start a web server.
@@ -78,20 +103,6 @@ $ make web
 Now server is running at `localhost:3000`.
 
 ### 3. Build and run Haskell code
-
-Set env vars:
-
-```
-export DB_DATABASE=rb_development
-export SIDEKIQ_NAMESPACE=sidekiq_rb_development
-export DB_PORT=32770
-export REDIS_PORT=32769
-```
-
-Port numbers written above are dummy. 
-Give actual ones you opened at step 1.
-
-Set the other vars as are.
 
 Finally you are ready to hit `stack`:
 
