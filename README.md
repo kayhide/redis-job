@@ -21,6 +21,8 @@ The following procedure hits `make` command a lot.
 
 If you are interested in each specific command, just open and see `Makefile`.
 
+If you are on NixOS, don't forget to enter Nix shell first, the `shell.nix` file should provive environment necessary to build everything in the repo.
+
 ### 1. Start DB and Redis server
 
 Install [docker](https://docs.docker.com/install/) and [docker-compose](https://docs.docker.com/compose/install/).
