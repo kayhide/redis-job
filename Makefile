@@ -25,8 +25,8 @@ infra:
 envs:
 	@echo "export DB_DATABASE=rb_development"
 	@echo "export SIDEKIQ_NAMESPACE=sidekiq_rb_development"
-	@echo "export DB_PORT=$$(docker port redis-job_db_1 | cut -d ':' -f 2)"
-	@echo "export REDIS_PORT=$$(docker port redis-job_redis_1 | cut -d ':' -f 2)"
+	@echo "export DB_PORT=$$(docker port $$(docker ps -q --filter 'name=redis-job_db_*') | cut -d ':' -f 2)"
+	@echo "export REDIS_PORT=$$(docker port $$(docker ps -q --filter 'name=redis-job_redis_*') | cut -d ':' -f 2)"
 .PHONY: envs
 
 
