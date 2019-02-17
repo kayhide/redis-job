@@ -13,7 +13,7 @@ import qualified Plugin.Sidekiq       as Sidekiq
 
 main :: IO ()
 main = do
-  config :: AppConfig <- activate
+  config :: AppConfig <- activate ()
   runReaderT app config
 
 

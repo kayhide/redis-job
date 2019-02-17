@@ -1,24 +1,34 @@
 {-# LANGUAGE TypeFamilyDependencies #-}
+{-# LANGUAGE TypeOperators          #-}
 module Configurable where
 
 import           ClassyPrelude
 
-import           Control.Lens       (Lens')
+import           Control.Lens       (Lens', lens)
+import           Data.Kind          (Constraint)
 import           System.Environment (lookupEnv)
 
 
 class Configurable (a :: *) where
   type Setting a = r | r -> a
   type Running a = r | r -> a
+  type Deps a :: [*]
 
   ready :: IO (Setting a)
 
-  start :: Setting a -> IO (Running a)
+  start
+    :: (All Configurable (Deps a), All (HasConfig env) (Deps a))
+    => Setting a
+    -> env
+    -> IO (Running a)
 
-  activate :: IO (Setting a, Running a)
-  activate = do
+  activate
+    :: (All Configurable (Deps a), All (HasConfig env) (Deps a))
+    => env
+    -> IO (Setting a, Running a)
+  activate env = do
     setting' <- ready
-    running' <- start setting'
+    running' <- start setting' env
     pure (setting', running')
 
 
@@ -38,3 +48,23 @@ instance FetchSetting Int
 instance FetchSetting Text where
   fetchSetting key def =
     maybe def pack <$> lookupEnv (unpack key)
+
+
+type family All (c :: k -> Constraint) (xs :: [k]) :: Constraint where
+  All c '[]       = ()
+  All c (x ': xs) = (c x, All c xs)
+
+
+
+instance Configurable () where
+  type Setting () = ()
+  type Running () = ()
+  type Deps () = '[]
+
+  ready = pure ()
+  start _ _ = pure ()
+
+instance HasConfig env () where
+  setting = lens (const ()) const
+  running = lens (const ()) const
+

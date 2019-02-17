@@ -3,9 +3,12 @@ module Plugin.Sidekiq.Config where
 
 import           ClassyPrelude
 
-import           Control.Lens.TH (makeFieldsNoPrefix)
+import           Control.Lens        ((^.))
+import           Control.Lens.TH     (makeFieldsNoPrefix)
 
-import           Configurable    (Configurable (..), fetchSetting)
+import           Configurable        (Configurable (..), HasConfig (..),
+                                      fetchSetting)
+import           Plugin.Redis.Config (RedisConfig, info)
 
 
 data SidekiqConfig
@@ -36,13 +39,15 @@ $(makeFieldsNoPrefix ''SidekiqRunning)
 instance Configurable SidekiqConfig where
   type Setting SidekiqConfig = SidekiqSetting
   type Running SidekiqConfig = SidekiqRunning
+  type Deps SidekiqConfig = '[RedisConfig]
 
   ready =
     SidekiqSetting
     <$> fetchSetting "SIDEKIQ_NAMESPACE" "sidekiq"
     <*> fetchSetting "SIDEKIQ_CONCURRENCY" 5
 
-  start (SidekiqSetting _ concurrency') = do
+  start (SidekiqSetting _ concurrency') env = do
+    print $ env ^. running @_ @RedisConfig . info
     jobs' <- atomically newTChan
     workers' <- replicateM concurrency' . async $ go jobs'
     pure $ SidekiqRunning workers' jobs'

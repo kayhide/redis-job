@@ -1,6 +1,9 @@
 resolver: lts-13.5
 packages:
-- '.'
+  - .
+
+extra-deps:
+  - extensible-0.5
 
 nix:
   packages:

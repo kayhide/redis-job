@@ -40,6 +40,7 @@ $(makeFieldsNoPrefix ''DbConfig)
 instance Configurable DbConfig where
   type Setting DbConfig = DbSetting
   type Running DbConfig = DbRunning
+  type Deps DbConfig = '[]
 
   ready =
     DbSetting
@@ -49,7 +50,7 @@ instance Configurable DbConfig where
     <*> fetchSetting "DB_USER" "postgres"
     <*> fetchSetting "DB_POOL" 5
 
-  start (DbSetting host' port' database' user' pool') = do
+  start (DbSetting host' port' database' user' pool') _ = do
     let connstr =
           "host=" <> host'
           <> " dbname=" <> database'
