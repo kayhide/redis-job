@@ -1,17 +1,11 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE OverloadedLabels      #-}
-{-# LANGUAGE TemplateHaskell       #-}
-{-# LANGUAGE TypeOperators         #-}
-{-# LANGUAGE UndecidableInstances  #-}
 module App.Config where
 
 import           ClassyPrelude
 
-import           Control.Lens          (_1, _2)
-
-import           Configurable
 import           Data.Extensible
 import           Data.Extensible.Plain
+
+import           Configurable
 import qualified Plugin.Db.Config      as Db
 import qualified Plugin.Redis.Config   as Redis
 import qualified Plugin.Sidekiq.Config as Sidekiq
@@ -56,11 +50,3 @@ instance Configurable AppConfig where
     sidekiq' <- start (pluck setting' :: Setting Sidekiq.SidekiqConfig) conf'''
 
     pure . snd $ second (shrink . (sidekiq' <%)) conf'''
-
-
-instance ( Configurable a
-         , Member settings (Setting a)
-         , Member runnings (Running a)
-         ) => HasConfig (AllOf settings, AllOf runnings) a where
-  setting = _1 . item (Proxy @(Setting a))
-  running = _2 . item (Proxy @(Running a))
