@@ -4,12 +4,14 @@ module Configurable where
 
 import           ClassyPrelude
 
-import           Control.Lens       (Lens', lens)
+import           Control.Lens       (Lens')
 import           Data.Kind          (Constraint)
+import           GHC.TypeLits       (Symbol)
 import           System.Environment (lookupEnv)
 
 
 class Configurable (a :: *) where
+  type Name a = (r :: Symbol) | r -> a
   type Setting a = r | r -> a
   type Running a = r | r -> a
   type Deps a :: [*]
@@ -53,18 +55,3 @@ instance FetchSetting Text where
 type family All (c :: k -> Constraint) (xs :: [k]) :: Constraint where
   All c '[]       = ()
   All c (x ': xs) = (c x, All c xs)
-
-
-
-instance Configurable () where
-  type Setting () = ()
-  type Running () = ()
-  type Deps () = '[]
-
-  ready = pure ()
-  start _ _ = pure ()
-
-instance HasConfig env () where
-  setting = lens (const ()) const
-  running = lens (const ()) const
-

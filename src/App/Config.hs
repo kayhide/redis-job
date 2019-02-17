@@ -2,12 +2,12 @@
 {-# LANGUAGE OverloadedLabels      #-}
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeOperators         #-}
+{-# LANGUAGE UndecidableInstances  #-}
 module App.Config where
 
 import           ClassyPrelude
 
 import           Control.Lens          ((^.), _1, _2)
-import           Control.Lens.TH
 
 import           Configurable
 import           Data.Extensible
@@ -19,18 +19,19 @@ import qualified Plugin.Sidekiq.Config as Sidekiq
 type AppConfig = (AppSetting, AppRunning)
 
 type AppSetting = Record
-  '[ "db" :> Db.DbSetting
-   , "redis" :> Redis.RedisSetting
-   , "sidekiq" :> Sidekiq.SidekiqSetting
+  '[ "db" ':> Db.DbSetting
+   , "redis" ':> Redis.RedisSetting
+   , "sidekiq" ':> Sidekiq.SidekiqSetting
    ]
 
 type AppRunning = Record
-  '[ "db" :> Db.DbRunning
-   , "redis" :> Redis.RedisRunning
-   , "sidekiq" :> Sidekiq.SidekiqRunning
+  '[ "db" ':> Db.DbRunning
+   , "redis" ':> Redis.RedisRunning
+   , "sidekiq" ':> Sidekiq.SidekiqRunning
    ]
 
 instance Configurable AppConfig where
+  type Name AppConfig = "app"
   type Setting AppConfig = AppSetting
   type Running AppConfig = AppRunning
   type Deps AppConfig = '[]
@@ -45,47 +46,21 @@ instance Configurable AppConfig where
       <: nil
 
   start setting' _ = do
-    db' <- start (setting' ^. #db) ()
-    redis' <- start (setting' ^. #redis) ()
+    let conf' = (setting', nil)
+    db' <- start (setting' ^. itemAssoc (Proxy @(Name Db.DbConfig))) conf'
 
-    let sub = (shrink setting', (#db @= db' <: #redis @= redis' <: nil)) :: AppConfigSub
-    sidekiq' <- start (setting' ^. #sidekiq) sub
-    pure $ #db @= db'
-      <: #redis @= redis'
-      <: #sidekiq @= sidekiq'
-      <: nil
+    let conf'' = second (#db @= db' <:) conf'
+    redis' <- start (setting' ^. itemAssoc (Proxy @(Name Redis.RedisConfig))) conf''
 
-instance HasConfig AppConfig Db.DbConfig where
-  setting = _1 . #db
-  running = _2 . #db
+    let conf''' = second (#redis @= redis' <:) conf''
+    sidekiq' <- start (setting' ^. itemAssoc (Proxy @(Name Sidekiq.SidekiqConfig))) conf'''
 
-instance HasConfig AppConfig Redis.RedisConfig where
-  setting = _1 . #redis
-  running = _2 . #redis
-
-instance HasConfig AppConfig Sidekiq.SidekiqConfig where
-  setting = _1 . #sidekiq
-  running = _2 . #sidekiq
+    pure . snd $ second (shrink . (#sidekiq @= sidekiq' <:)) conf'''
 
 
-
-
-type AppConfigSub = (AppSettingSub, AppRunningSub)
-
-type AppSettingSub = Record
-  '[ "db" :> Db.DbSetting
-   , "redis" :> Redis.RedisSetting
-   ]
-
-type AppRunningSub = Record
-  '[ "db" :> Db.DbRunning
-   , "redis" :> Redis.RedisRunning
-   ]
-
-instance HasConfig AppConfigSub Db.DbConfig where
-  setting = _1 . #db
-  running = _2 . #db
-
-instance HasConfig AppConfigSub Redis.RedisConfig where
-  setting = _1 . #redis
-  running = _2 . #redis
+instance ( Configurable a
+         , Associate (Name a) (Setting a) settings
+         , Associate (Name a) (Running a) runnings
+         ) => HasConfig (Record settings, Record runnings) a where
+  setting = _1 . itemAssoc (Proxy @(Name a))
+  running = _2 . itemAssoc (Proxy @(Name a))
