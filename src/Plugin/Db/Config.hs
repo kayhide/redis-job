@@ -38,7 +38,6 @@ $(makeFieldsNoPrefix ''DbConfig)
 
 
 instance Configurable DbConfig where
-  type Name DbConfig = "db"
   type Setting DbConfig = DbSetting
   type Running DbConfig = DbRunning
   type Deps DbConfig = '[]

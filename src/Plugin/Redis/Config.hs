@@ -35,7 +35,6 @@ $(makeFieldsNoPrefix ''RedisRunning)
 
 
 instance Configurable RedisConfig where
-  type Name RedisConfig = "redis"
   type Setting RedisConfig = RedisSetting
   type Running RedisConfig = RedisRunning
   type Deps RedisConfig = '[]

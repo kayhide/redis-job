@@ -37,7 +37,6 @@ $(makeFieldsNoPrefix ''SidekiqRunning)
 
 
 instance Configurable SidekiqConfig where
-  type Name SidekiqConfig = "sidekiq"
   type Setting SidekiqConfig = SidekiqSetting
   type Running SidekiqConfig = SidekiqRunning
   type Deps SidekiqConfig = '[RedisConfig]

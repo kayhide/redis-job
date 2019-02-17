@@ -11,7 +11,6 @@ import           System.Environment (lookupEnv)
 
 
 class Configurable (a :: *) where
-  type Name a = (r :: Symbol) | r -> a
   type Setting a = r | r -> a
   type Running a = r | r -> a
   type Deps a :: [*]

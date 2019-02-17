@@ -7,10 +7,11 @@ module App.Config where
 
 import           ClassyPrelude
 
-import           Control.Lens          ((^.), _1, _2)
+import           Control.Lens          (_1, _2)
 
 import           Configurable
 import           Data.Extensible
+import           Data.Extensible.Plain
 import qualified Plugin.Db.Config      as Db
 import qualified Plugin.Redis.Config   as Redis
 import qualified Plugin.Sidekiq.Config as Sidekiq
@@ -18,20 +19,19 @@ import qualified Plugin.Sidekiq.Config as Sidekiq
 
 type AppConfig = (AppSetting, AppRunning)
 
-type AppSetting = Record
-  '[ "db" ':> Db.DbSetting
-   , "redis" ':> Redis.RedisSetting
-   , "sidekiq" ':> Sidekiq.SidekiqSetting
+type AppSetting = AllOf
+  '[ Db.DbSetting
+   , Redis.RedisSetting
+   , Sidekiq.SidekiqSetting
    ]
 
-type AppRunning = Record
-  '[ "db" ':> Db.DbRunning
-   , "redis" ':> Redis.RedisRunning
-   , "sidekiq" ':> Sidekiq.SidekiqRunning
+type AppRunning = AllOf
+  '[ Db.DbRunning
+   , Redis.RedisRunning
+   , Sidekiq.SidekiqRunning
    ]
 
 instance Configurable AppConfig where
-  type Name AppConfig = "app"
   type Setting AppConfig = AppSetting
   type Running AppConfig = AppRunning
   type Deps AppConfig = '[]
@@ -40,27 +40,27 @@ instance Configurable AppConfig where
     db' <- ready
     redis' <- ready
     sidekiq' <- ready
-    pure $ #db @= db'
-      <: #redis @= redis'
-      <: #sidekiq @= sidekiq'
-      <: nil
+    pure $ db'
+      <% redis'
+      <% sidekiq'
+      <% nil
 
   start setting' _ = do
     let conf' = (setting', nil)
-    db' <- start (setting' ^. itemAssoc (Proxy @(Name Db.DbConfig))) conf'
+    db' <- start (pluck setting' :: Db.DbSetting) conf'
 
-    let conf'' = second (#db @= db' <:) conf'
-    redis' <- start (setting' ^. itemAssoc (Proxy @(Name Redis.RedisConfig))) conf''
+    let conf'' = second (db' <%) conf'
+    redis' <- start (pluck setting' :: Setting Redis.RedisConfig) conf''
 
-    let conf''' = second (#redis @= redis' <:) conf''
-    sidekiq' <- start (setting' ^. itemAssoc (Proxy @(Name Sidekiq.SidekiqConfig))) conf'''
+    let conf''' = second (redis' <%) conf''
+    sidekiq' <- start (pluck setting' :: Setting Sidekiq.SidekiqConfig) conf'''
 
-    pure . snd $ second (shrink . (#sidekiq @= sidekiq' <:)) conf'''
+    pure . snd $ second (shrink . (sidekiq' <%)) conf'''
 
 
 instance ( Configurable a
-         , Associate (Name a) (Setting a) settings
-         , Associate (Name a) (Running a) runnings
-         ) => HasConfig (Record settings, Record runnings) a where
-  setting = _1 . itemAssoc (Proxy @(Name a))
-  running = _2 . itemAssoc (Proxy @(Name a))
+         , Member settings (Setting a)
+         , Member runnings (Running a)
+         ) => HasConfig (AllOf settings, AllOf runnings) a where
+  setting = _1 . item (Proxy @(Setting a))
+  running = _2 . item (Proxy @(Running a))
