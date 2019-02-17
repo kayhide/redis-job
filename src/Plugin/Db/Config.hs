@@ -4,7 +4,6 @@ module Plugin.Db.Config where
 
 import           ClassyPrelude
 
-import           Control.Lens                (Lens')
 import           Control.Lens.TH             (makeFieldsNoPrefix)
 import           Control.Monad.Logger
 import           Data.Pool                   (Pool)
@@ -38,7 +37,6 @@ $(makeFieldsNoPrefix ''DbRunning)
 $(makeFieldsNoPrefix ''DbConfig)
 
 
-
 instance Configurable DbConfig where
   type Setting DbConfig = DbSetting
   type Running DbConfig = DbRunning
@@ -59,8 +57,3 @@ instance Configurable DbConfig where
           <> " port=" <> port'
     pool'' <- runStdoutLoggingT $ createPostgresqlPool (encodeUtf8 connstr) pool'
     pure $ DbRunning pool''
-
-
-class HasConfig env where
-  setting :: Lens' env DbSetting
-  running :: Lens' env DbRunning

@@ -19,7 +19,7 @@ import qualified Plugin.Sidekiq       as Sidekiq
 
 run :: IO ()
 run = do
-  config <- uncurry AppConfig <$> activate
+  config :: AppConfig <- activate
   print config
   runReaderT app config
 

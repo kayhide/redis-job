@@ -3,7 +3,6 @@ module Plugin.Redis.Config where
 
 import           ClassyPrelude
 
-import           Control.Lens    (Lens')
 import           Control.Lens.TH (makeFieldsNoPrefix)
 import           Database.Redis  (ConnectInfo, Connection, checkedConnect,
                                   parseConnectInfo)
@@ -35,7 +34,6 @@ $(makeFieldsNoPrefix ''RedisSetting)
 $(makeFieldsNoPrefix ''RedisRunning)
 
 
-
 instance Configurable RedisConfig where
   type Setting RedisConfig = RedisSetting
   type Running RedisConfig = RedisRunning
@@ -52,8 +50,3 @@ instance Configurable RedisConfig where
         RedisRunning info' <$> checkedConnect info'
     where
       url' = "redis://" <> host' <> ":" <> port'
-
-
-class HasConfig env where
-  setting :: Lens' env RedisSetting
-  running :: Lens' env RedisRunning

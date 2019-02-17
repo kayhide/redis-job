@@ -3,7 +3,6 @@ module Plugin.Sidekiq.Config where
 
 import           ClassyPrelude
 
-import           Control.Lens    (Lens')
 import           Control.Lens.TH (makeFieldsNoPrefix)
 
 import           Configurable    (Configurable (..), fetchSetting)
@@ -51,8 +50,3 @@ instance Configurable SidekiqConfig where
       go :: TChan (IO ()) -> IO ()
       go jobs' = forever $
         join $ atomically $ readTChan jobs'
-
-
-class HasConfig env where
-  setting :: Lens' env SidekiqSetting
-  running :: Lens' env SidekiqRunning

@@ -5,13 +5,14 @@ import           ClassyPrelude
 import           Control.Lens         ((^.))
 import           Database.Persist.Sql
 
+import           Configurable         (HasConfig (..))
 import           Plugin.Db.Config
 
 
 run
-  :: (HasConfig env, MonadReader env m, MonadIO m, MonadUnliftIO m)
+  :: (HasConfig env DbConfig, MonadReader env m, MonadIO m, MonadUnliftIO m)
   => ReaderT SqlBackend m a
   -> m a
 run sql = do
-  pool' <- asks (^. running . pool)
+  pool' <- asks (^. running @_ @DbConfig . pool)
   runSqlPool sql pool'
