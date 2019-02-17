@@ -37,13 +37,14 @@ $(makeFieldsNoPrefix ''RedisRunning)
 instance Configurable RedisConfig where
   type Setting RedisConfig = RedisSetting
   type Running RedisConfig = RedisRunning
+  type Deps RedisConfig = '[]
 
   ready =
     RedisSetting
     <$> fetchSetting "REDIS_HOST" "localhost"
     <*> fetchSetting "REDIS_PORT" "6379"
 
-  start (RedisSetting host' port') =
+  start (RedisSetting host' port') _ =
     case parseConnectInfo (unpack url') of
       Left err -> fail $ pack err
       Right info' ->

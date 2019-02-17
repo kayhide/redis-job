@@ -7,7 +7,7 @@ import           Database.Persist
 import           Database.Persist.Sql
 import qualified Database.Redis       as Redis
 
-import           App.Config           (AppConfig (..))
+import           App.Config           (AppConfig (..), activate')
 import           App.Job.TrainJob
 import           Configurable         (activate)
 import           Model.Entities
@@ -19,7 +19,7 @@ import qualified Plugin.Sidekiq       as Sidekiq
 
 run :: IO ()
 run = do
-  config :: AppConfig <- activate
+  config :: AppConfig <- activate'
   print config
   runReaderT app config
 
