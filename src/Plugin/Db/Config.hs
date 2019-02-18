@@ -42,7 +42,7 @@ instance Configurable DbConfig where
   type Running DbConfig = DbRunning
   type Deps DbConfig = '[]
 
-  ready =
+  ready _ =
     DbSetting
     <$> fetchSetting "DB_HOST" "localhost"
     <*> fetchSetting "DB_PORT" "5432"
@@ -50,7 +50,7 @@ instance Configurable DbConfig where
     <*> fetchSetting "DB_USER" "postgres"
     <*> fetchSetting "DB_POOL" 5
 
-  start (DbSetting host' port' database' user' pool') _ = do
+  start _ (DbSetting host' port' database' user' pool') _ = do
     let connstr =
           "host=" <> host'
           <> " dbname=" <> database'

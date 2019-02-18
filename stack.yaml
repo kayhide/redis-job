@@ -6,5 +6,5 @@ extra-deps:
   - extensible-0.5
 
 nix:
-  packages:
-    - postgresql
+  shell-file: stack-shell.nix
+  enable: true

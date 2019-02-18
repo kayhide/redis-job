@@ -5,6 +5,7 @@ import           ClassyPrelude
 
 import           Control.Lens        ((^.))
 import           Control.Lens.TH     (makeFieldsNoPrefix)
+import           Data.Proxy
 
 import           Configurable        (Configurable (..), HasConfig (..),
                                       fetchSetting)
@@ -41,13 +42,13 @@ instance Configurable SidekiqConfig where
   type Running SidekiqConfig = SidekiqRunning
   type Deps SidekiqConfig = '[RedisConfig]
 
-  ready =
+  ready _ =
     SidekiqSetting
     <$> fetchSetting "SIDEKIQ_NAMESPACE" "sidekiq"
     <*> fetchSetting "SIDEKIQ_CONCURRENCY" 5
 
-  start (SidekiqSetting _ concurrency') env = do
-    print $ env ^. running @_ @RedisConfig . info
+  start _ (SidekiqSetting _ concurrency') env = do
+    print $ env ^. running (Proxy @RedisConfig) . info
     jobs' <- atomically newTChan
     workers' <- replicateM concurrency' . async $ go jobs'
     pure $ SidekiqRunning workers' jobs'

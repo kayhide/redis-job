@@ -39,12 +39,12 @@ instance Configurable RedisConfig where
   type Running RedisConfig = RedisRunning
   type Deps RedisConfig = '[]
 
-  ready =
+  ready _ =
     RedisSetting
     <$> fetchSetting "REDIS_HOST" "localhost"
     <*> fetchSetting "REDIS_PORT" "6379"
 
-  start (RedisSetting host' port') _ =
+  start _ (RedisSetting host' port') _ =
     case parseConnectInfo (unpack url') of
       Left err -> fail $ pack err
       Right info' ->

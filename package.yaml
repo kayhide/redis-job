@@ -41,6 +41,7 @@ dependencies:
   - resource-pool
   - monad-logger
   - extensible
+  - ghc-prim
 
 default-extensions:
   - AutoDeriveTypeable

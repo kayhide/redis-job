@@ -3,6 +3,7 @@ module Plugin.Redis where
 import           ClassyPrelude
 
 import           Control.Lens        ((^.))
+import           Data.Proxy
 import           Database.Redis      as Redis
 
 import           Configurable        (HasConfig (..))
@@ -14,7 +15,7 @@ run
   => Redis.Redis a
   -> m a
 run redis = do
-  conn' <- asks (^. running @_ @RedisConfig . conn)
+  conn' <- asks (^. running (Proxy @RedisConfig) . conn)
   liftIO $ Redis.runRedis conn' redis
 
 brpop :: (RedisCtx m f)

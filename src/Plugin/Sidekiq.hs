@@ -11,6 +11,7 @@ import           ClassyPrelude
 import           Control.Lens          ((^.))
 
 import           Configurable          (HasConfig (..))
+import           Data.Proxy
 import qualified Plugin.Redis          as Redis
 import           Plugin.Redis.Config   (RedisConfig)
 import           Plugin.Sidekiq.Config
@@ -22,9 +23,9 @@ watch
   => (Text -> ByteString -> IO ())
   -> m a
 watch action = do
-  namespace' <- asks (^. setting @_ @SidekiqConfig . namespace)
+  namespace' <- asks (^. setting (Proxy @SidekiqConfig) . namespace)
   let queue' = namespace' <> ":queue:default"
-  jobs' <- asks (^. running @_ @SidekiqConfig . jobs)
+  jobs' <- asks (^. running (Proxy @SidekiqConfig) . jobs)
   putStrLn "Listening to: "
   putStrLn $ "  " <> queue'
   forever $ do
@@ -40,7 +41,7 @@ watch action = do
       atomically $ writeTChan jobs' $ action (decodeUtf8 queue'') x'
 
 queue :: (HasConfig env SidekiqConfig, MonadReader env m, MonadIO m) => m Text
-queue = (<> ":queue:default") <$> asks (^. setting @_ @SidekiqConfig . namespace)
+queue = (<> ":queue:default") <$> asks (^. setting (Proxy @SidekiqConfig) . namespace)
 
 performNow :: (Job a, Args a ~ args) => JobWrapper a -> IO ()
 performNow wrapper =

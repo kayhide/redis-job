@@ -3,6 +3,7 @@ module Plugin.Db where
 import           ClassyPrelude
 
 import           Control.Lens         ((^.))
+import           Data.Proxy
 import           Database.Persist.Sql
 
 import           Configurable         (HasConfig (..))
@@ -14,5 +15,5 @@ run
   => ReaderT SqlBackend m a
   -> m a
 run sql = do
-  pool' <- asks (^. running @_ @DbConfig . pool)
+  pool' <- asks (^. running (Proxy @DbConfig) . pool)
   runSqlPool sql pool'

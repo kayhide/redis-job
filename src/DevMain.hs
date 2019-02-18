@@ -3,6 +3,7 @@ module DevMain where
 import           ClassyPrelude
 
 import qualified Data.Aeson           as Aeson
+import           Data.Proxy
 import           Database.Persist
 import           Database.Persist.Sql
 import qualified Database.Redis       as Redis
@@ -19,7 +20,7 @@ import qualified Plugin.Sidekiq       as Sidekiq
 
 run :: IO ()
 run = do
-  config :: AppConfig <- activate ()
+  config <- activate (Proxy @AppConfig) ()
   print config
   runReaderT app config
 

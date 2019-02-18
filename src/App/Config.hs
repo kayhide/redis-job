@@ -4,6 +4,7 @@ import           ClassyPrelude
 
 import           Data.Extensible
 import           Data.Extensible.Plain
+import           Data.Proxy
 
 import           Configurable
 import qualified Plugin.Db.Config      as Db
@@ -30,23 +31,23 @@ instance Configurable AppConfig where
   type Running AppConfig = AppRunning
   type Deps AppConfig = '[]
 
-  ready = do
-    db' <- ready
-    redis' <- ready
-    sidekiq' <- ready
+  ready _ = do
+    db' <- ready (Proxy @Db.DbConfig)
+    redis' <- ready (Proxy @Redis.RedisConfig)
+    sidekiq' <- ready (Proxy @Sidekiq.SidekiqConfig)
     pure $ db'
       <% redis'
       <% sidekiq'
       <% nil
 
-  start setting' _ = do
+  start _ setting' _ = do
     let conf' = (setting', nil)
-    db' <- start (pluck setting' :: Db.DbSetting) conf'
+    db' <- start (Proxy @Db.DbConfig) (pluck setting') conf'
 
     let conf'' = second (db' <%) conf'
-    redis' <- start (pluck setting' :: Setting Redis.RedisConfig) conf''
+    redis' <- start (Proxy @Redis.RedisConfig) (pluck setting') conf''
 
     let conf''' = second (redis' <%) conf''
-    sidekiq' <- start (pluck setting' :: Setting Sidekiq.SidekiqConfig) conf'''
+    sidekiq' <- start (Proxy @Sidekiq.SidekiqConfig) (pluck setting') conf'''
 
     pure . snd $ second (shrink . (sidekiq' <%)) conf'''
