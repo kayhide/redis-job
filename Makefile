@@ -7,15 +7,15 @@ watch:
 .PHONY: watch
 
 migrate:
-	cd rb && bundle exec rails db:create db:migrate
+	$$(make envs) && cd rb && bundle exec rails db:create db:migrate
 .PHONY: migrate
 
 web:
-	cd rb && bundle exec rails server
+	$$(make envs) && cd rb && bundle exec rails server
 .PHONY: web
 
 worker:
-	cd rb && bundle exec sidekiq -C config/sidekiq.yml
+	$$(make envs) && cd rb && bundle exec sidekiq -C config/sidekiq.yml
 .PHONY: worker
 
 infra:
