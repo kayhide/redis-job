@@ -8,7 +8,9 @@ import           Control.Lens.TH     (makeFieldsNoPrefix)
 
 import           Configurable        (Configurable (..), HasConfig (..),
                                       fetchSetting)
+import qualified Plugin.Redis        as Redis
 import           Plugin.Redis.Config (RedisConfig, info)
+import           Plugin.Sidekiq.Job
 
 
 data SidekiqConfig
@@ -16,13 +18,15 @@ data SidekiqConfig
 data SidekiqSetting = SidekiqSetting
   { _namespace   :: Text
   , _concurrency :: Int
+  , _queues      :: [Text]
   }
   deriving (Eq, Show)
 
 
 data SidekiqRunning = SidekiqRunning
   { _workers :: [Async ()]
-  , _jobs    :: TChan (IO ())
+  , _jobs    :: TChan SomeJob
+  , _channel :: TChan (Text, ByteString)
   }
 
 instance Show SidekiqRunning where
@@ -30,6 +34,7 @@ instance Show SidekiqRunning where
     "SidekiqRunning "
     <> "{_workers = [...]"
     <> ", _jobs = [...]"
+    <> ", _channel = [...]"
     <> "}"
 
 $(makeFieldsNoPrefix ''SidekiqSetting)
@@ -45,13 +50,49 @@ instance Configurable SidekiqConfig where
     SidekiqSetting
     <$> fetchSetting "SIDEKIQ_NAMESPACE" "sidekiq"
     <*> fetchSetting "SIDEKIQ_CONCURRENCY" 5
+    <*> fetchSetting "SIDEKIQ_QUEUES" ["default"]
 
-  start (SidekiqSetting _ concurrency') env = do
-    print $ env ^. running @_ @RedisConfig . info
+  start setting'@(SidekiqSetting _ concurrency' _) env = do
     jobs' <- atomically newTChan
     workers' <- replicateM concurrency' . async $ go jobs'
-    pure $ SidekiqRunning workers' jobs'
+    channel' <- atomically newTChan
+    void $ async $ runReaderT (watch' setting' channel') env
+    pure $ SidekiqRunning workers' jobs' channel'
     where
-      go :: TChan (IO ()) -> IO ()
-      go jobs' = forever $
-        join $ atomically $ readTChan jobs'
+      go :: TChan SomeJob -> IO ()
+      go jobs' = forever $ do
+        job' <- atomically $ readTChan jobs'
+        performNow job'
+
+watch'
+  :: ( HasConfig env RedisConfig
+     , MonadReader env m
+     , MonadIO m
+     )
+  => SidekiqSetting
+  -> TChan (Text, ByteString)
+  -> m a
+watch' setting' chan'= do
+  let queues' = getQueues setting'
+  putStrLn "Listening to: "
+  putStrLn $ "  " <> unwords queues'
+  forever $ do
+    Redis.run $
+      Redis.brpop (encodeUtf8 <$> queues') 1 >>= \case
+        Left _   -> fail "Failed to read queue"
+        Right x' -> liftIO $ traverse_ post' x'
+
+  where
+    post' :: (ByteString, ByteString) -> IO ()
+    post' x = do
+      atomically $ writeTChan chan' $ first decodeUtf8 x
+
+getQueues :: SidekiqSetting -> [Text]
+getQueues setting' = ((namespace' <> ":queue:") <>) <$> queues'
+  where
+  namespace' = setting' ^. namespace
+  queues' = setting' ^. queues
+
+askQueues :: (HasConfig env SidekiqConfig, MonadReader env m, MonadIO m) => m [Text]
+askQueues = do
+  getQueues <$> asks (^. setting @_ @SidekiqConfig)

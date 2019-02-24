@@ -91,3 +91,14 @@ instance FromJSON (Args a) => FromJSON (JobWrapper a) where
     <*> o .: "jid"
     <*> (posixSecondsToUTCTime <$> o .: "created_at")
     <*> (posixSecondsToUTCTime <$> o .: "enqueued_at")
+
+
+data SomeJob where
+  SomeJob :: forall a. Job a => JobWrapper a -> SomeJob
+
+
+performNow :: SomeJob -> IO()
+performNow (SomeJob wrapper) =
+  traverse_ perform $ do
+  args' <- headMay $ _args wrapper
+  headMay $ _arguments args'

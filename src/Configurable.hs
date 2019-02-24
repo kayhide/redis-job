@@ -69,3 +69,7 @@ instance FetchSetting Int
 instance FetchSetting Text where
   fetchSetting key def =
     maybe def pack <$> lookupEnv (unpack key)
+
+instance FetchSetting [Text] where
+  fetchSetting key def =
+    maybe def (words . pack) <$> lookupEnv (unpack key)

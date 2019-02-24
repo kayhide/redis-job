@@ -7,9 +7,8 @@ import           Database.Persist
 import           Database.Persist.Sql
 import qualified Database.Redis       as Redis
 
-import           App.Config           (AppConfig (..), activate')
+import           App.Config           (AppConfig, activate')
 import           App.Job.TrainJob
-import           Configurable         (activate)
 import           Model.Entities
 import           Model.Predictor
 import qualified Plugin.Db            as Db
@@ -30,29 +29,33 @@ app :: AppM ()
 app = do
   listJobs
   listPredictors
-  Sidekiq.watch $ \queue' x -> do
-    putStrLn $ "Fetched from queue: " <> queue'
-    case (Aeson.eitherDecode . fromStrict) x of
-      Left msg                           -> putStrLn . pack $ msg
-      Right (job :: JobWrapper TrainJob) -> Sidekiq.performNow job
+  Sidekiq.watch $ \x -> do
+    let x' = fromStrict x
+    Sidekiq.SomeJob <$> (Aeson.decode x' :: Maybe (JobWrapper TrainJob))
 
 
 listJobs :: AppM ()
 listJobs = do
-  queue' <- Sidekiq.queue
-  jobs :: [Either String (JobWrapper TrainJob)] <- Redis.run $ do
-    xs <- Redis.lrange (encodeUtf8 queue') 0 (-1)
-    case xs of
-      Left err  -> fail $ "Failed to read queue: " <> show err
-      Right xs' -> do
-        traverse_ print xs'
-        pure $ fmap (Aeson.eitherDecode . fromStrict) xs'
+  putStrLn "*** Listing Jobs"
+  queues' <- Sidekiq.askQueues
+  traverse_ print =<< concat <$> traverse jobs' queues'
+  putStrLn ""
 
-  print jobs
+  where
+    jobs' :: Text -> AppM [Either String (JobWrapper TrainJob)]
+    jobs' queue = Redis.run $ do
+      xs <- Redis.lrange (encodeUtf8 queue) 0 (-1)
+      case xs of
+        Left err  -> fail $ "Failed to read queue: " <> show err
+        Right xs' -> do
+          pure $ Aeson.eitherDecode . fromStrict <$> xs'
+
 
 
 
 listPredictors :: AppM ()
 listPredictors = do
+  putStrLn "*** Listing Predictors"
   predictors :: [Entity Predictor] <- Db.run $ selectList [] []
   traverse_ print predictors
+  putStrLn ""

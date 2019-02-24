@@ -1,7 +1,6 @@
 module Plugin.Sidekiq
   ( watch
-  , queue
-  , performNow
+  , askQueues
   , module Plugin.Sidekiq.Job
   )
 where
@@ -11,39 +10,28 @@ import           ClassyPrelude
 import           Control.Lens          ((^.))
 
 import           Configurable          (HasConfig (..))
-import qualified Plugin.Redis          as Redis
-import           Plugin.Redis.Config   (RedisConfig)
 import           Plugin.Sidekiq.Config
 import           Plugin.Sidekiq.Job
 
-
 watch
-  :: (HasConfig env SidekiqConfig, HasConfig env RedisConfig, MonadReader env m, MonadIO m)
-  => (Text -> ByteString -> IO ())
+  :: ( HasConfig env SidekiqConfig
+     , MonadReader env m
+     , MonadIO m
+     )
+  => (ByteString -> Maybe SomeJob)
   -> m a
-watch action = do
-  namespace' <- asks (^. setting @_ @SidekiqConfig . namespace)
-  let queue' = namespace' <> ":queue:default"
+watch decode = do
+  chan' <- asks (^. running @_ @SidekiqConfig . channel)
   jobs' <- asks (^. running @_ @SidekiqConfig . jobs)
-  putStrLn "Listening to: "
-  putStrLn $ "  " <> queue'
-  forever $ do
-    x <- Redis.run $
-      Redis.brpop [encodeUtf8 queue'] 1 >>= \case
-        Left _ -> fail "Failed to read queue"
-        Right x' -> pure x'
-    traverse_ (liftIO . post' jobs') x
+  liftIO $ do
+    forever $ do
+      x <- atomically $ readTChan chan'
+      post' jobs' x
 
   where
-    post' :: TChan (IO ()) -> (ByteString, ByteString) -> IO ()
-    post' jobs' (queue'', x') =
-      atomically $ writeTChan jobs' $ action (decodeUtf8 queue'') x'
-
-queue :: (HasConfig env SidekiqConfig, MonadReader env m, MonadIO m) => m Text
-queue = (<> ":queue:default") <$> asks (^. setting @_ @SidekiqConfig . namespace)
-
-performNow :: (Job a, Args a ~ args) => JobWrapper a -> IO ()
-performNow wrapper =
-  traverse_ perform $ do
-  args' <- headMay $ _args wrapper
-  headMay $ _arguments args'
+    post' :: TChan SomeJob -> (Text, ByteString) -> IO ()
+    post' jobs' (queue'', x') = do
+      putStrLn $ "Fetched from queue: " <> queue''
+      case decode x' of
+        Nothing  -> fail "Cannot decode"
+        Just job -> atomically $ writeTChan jobs' job

@@ -4,9 +4,8 @@ import           ClassyPrelude
 
 import qualified Data.Aeson           as Aeson
 
-import           App.Config           (AppConfig (..), activate')
+import           App.Config           (AppConfig, activate')
 import           App.Job.TrainJob
-import           Configurable         (activate)
 import           Plugin.Sidekiq       (JobWrapper)
 import qualified Plugin.Sidekiq       as Sidekiq
 
@@ -21,8 +20,6 @@ type AppM a = ReaderT AppConfig IO a
 
 app :: AppM ()
 app =
-  Sidekiq.watch $ \queue' x -> do
-    putStrLn $ "Fetched from queue: " <> queue'
-    case (Aeson.eitherDecode . fromStrict) x of
-      Left msg                           -> putStrLn . pack $ msg
-      Right (job :: JobWrapper TrainJob) -> Sidekiq.performNow job
+  Sidekiq.watch $ \x -> do
+    let x' = fromStrict x
+    Sidekiq.SomeJob <$> (Aeson.decode x' :: Maybe (JobWrapper TrainJob))
