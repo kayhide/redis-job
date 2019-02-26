@@ -66,6 +66,11 @@ class FetchSetting a where
 
 instance FetchSetting Int
 
+instance FetchSetting Bool where
+  fetchSetting key def = do
+    let falses = ["false", "f", "0"] :: [Text]
+    maybe def ((`notElem` falses) . toLower . pack) <$> lookupEnv (unpack key)
+
 instance FetchSetting Text where
   fetchSetting key def =
     maybe def pack <$> lookupEnv (unpack key)

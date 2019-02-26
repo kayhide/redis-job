@@ -7,12 +7,14 @@ import           Data.Extensible.Plain
 
 import           Configurable
 import           Plugin.Db.Config      (DbConfig)
+import           Plugin.Logger.Config  (LoggerConfig)
 import           Plugin.Redis.Config   (RedisConfig)
 import           Plugin.Sidekiq.Config (SidekiqConfig)
 
 
 type AppConfig = AllOf (ToConfigs
-  '[ DbConfig
+  '[ LoggerConfig
+   , DbConfig
    , RedisConfig
    , SidekiqConfig
    ]
@@ -21,6 +23,7 @@ type AppConfig = AllOf (ToConfigs
 activate' :: IO AppConfig
 activate' =
   pure nil
+  >>= activate @LoggerConfig
   >>= activate @DbConfig
   >>= activate @RedisConfig
   >>= activate @SidekiqConfig

@@ -3,13 +3,15 @@ module Plugin.Sidekiq.Config where
 
 import           ClassyPrelude
 
-import           Control.Lens        ((^.))
-import           Control.Lens.TH     (makeFieldsNoPrefix)
+import           Control.Lens         ((^.))
+import           Control.Lens.TH      (makeFieldsNoPrefix)
 
-import           Configurable        (Configurable (..), HasConfig (..),
-                                      fetchSetting)
-import qualified Plugin.Redis        as Redis
-import           Plugin.Redis.Config (RedisConfig, info)
+import           Configurable         (Configurable (..), HasConfig (..),
+                                       fetchSetting)
+import qualified Plugin.Logger        as Logger
+import           Plugin.Logger.Config (LoggerConfig)
+import qualified Plugin.Redis         as Redis
+import           Plugin.Redis.Config  (RedisConfig, info)
 import           Plugin.Sidekiq.Job
 
 
@@ -44,7 +46,7 @@ $(makeFieldsNoPrefix ''SidekiqRunning)
 instance Configurable SidekiqConfig where
   type Setting SidekiqConfig = SidekiqSetting
   type Running SidekiqConfig = SidekiqRunning
-  type Deps SidekiqConfig = '[RedisConfig]
+  type Deps SidekiqConfig = '[LoggerConfig, RedisConfig]
 
   ready =
     SidekiqSetting
@@ -65,7 +67,8 @@ instance Configurable SidekiqConfig where
         performNow job'
 
 watch'
-  :: ( HasConfig env RedisConfig
+  :: ( HasConfig env LoggerConfig
+     , HasConfig env RedisConfig
      , MonadReader env m
      , MonadIO m
      )
@@ -74,8 +77,8 @@ watch'
   -> m a
 watch' setting' chan'= do
   let queues' = getQueues setting'
-  putStrLn "Listening to: "
-  putStrLn $ "  " <> unwords queues'
+  Logger.info "Listening to: "
+  Logger.info $ "  " <> unwords queues'
   forever $ do
     Redis.run $
       Redis.brpop (encodeUtf8 <$> queues') 1 >>= \case
