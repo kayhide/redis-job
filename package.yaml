@@ -41,6 +41,13 @@ dependencies:
   - resource-pool
   - monad-logger
   - extensible
+  - http-client
+  - http-reverse-proxy
+  - wai
+  - warp
+  - servant-server
+  - lucid
+  - servant-lucid
 
 default-extensions:
   - AutoDeriveTypeable
@@ -54,6 +61,7 @@ default-extensions:
   - DeriveFunctor
   - DeriveGeneric
   - DeriveTraversable
+  - DerivingStrategies
   - DoAndIfThenElse
   - EmptyDataDecls
   - ExistentialQuantification
@@ -81,6 +89,7 @@ default-extensions:
   - TupleSections
   - TypeApplications
   - TypeFamilies
+  - TypeOperators
   - TypeSynonymInstances
   - ViewPatterns
 
@@ -98,3 +107,18 @@ executables:
     dependencies:
       - redis-job
 
+  web:
+    main:                Main.hs
+    source-dirs:         app/web
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - redis-job
+
+  dev:
+    main:                Main.hs
+    source-dirs:         app/dev
+    dependencies:
+      - redis-job

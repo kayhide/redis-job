@@ -1,5 +1,5 @@
 dev:
-	$$(make envs) && ghcid --command "stack ghci --ghci-options -fdiagnostics-color=always" --test "DevMain.run"
+	$$(make envs) && ghcid --command "stack ghci redis-job:exe:dev --ghci-options -fdiagnostics-color=always" --test "Main.main"
 .PHONY: dev
 
 watch:
