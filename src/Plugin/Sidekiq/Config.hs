@@ -77,8 +77,7 @@ watch'
   -> m a
 watch' setting' chan'= do
   let queues' = getQueues setting'
-  Logger.info "Listening to: "
-  Logger.info $ "  " <> unwords queues'
+  Logger.info $ "Listening to: " <> unwords queues'
   forever $ do
     Redis.run $
       Redis.brpop (encodeUtf8 <$> queues') 1 >>= \case

@@ -1,5 +1,8 @@
-module Model.Predictor where
+module Model.Predictor
+  ( Predictor (..)
+  )
+where
 
-import ClassyPrelude
+import           ClassyPrelude
 
-import Model.Entities
+import           Model.Entities

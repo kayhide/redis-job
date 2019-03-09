@@ -10,4 +10,6 @@ import qualified Config
 main :: IO ()
 main = do
   config <- Config.activate'
-  runReaderT Api.start config
+  runReaderT (Api.start config) config
+
+

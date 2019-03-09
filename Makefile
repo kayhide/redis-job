@@ -11,7 +11,7 @@ migrate:
 .PHONY: migrate
 
 web:
-	$$(make envs) && cd rb && bundle exec rails server
+	$$(make envs) && cd rb && bundle exec rails server -p 5100
 .PHONY: web
 
 worker:

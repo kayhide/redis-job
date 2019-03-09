@@ -9,8 +9,10 @@ import           Configurable         (HasConfig (..))
 import           Plugin.Db.Config
 
 
+type Config = DbConfig
+
 run
-  :: (HasConfig env DbConfig, MonadReader env m, MonadIO m, MonadUnliftIO m)
+  :: (HasConfig env DbConfig, MonadReader env m, MonadUnliftIO m)
   => ReaderT SqlBackend m a
   -> m a
 run sql = do

@@ -1,15 +1,12 @@
 {-# LANGUAGE TemplateHaskell #-}
 module App.Api.Config where
 
-import           ClassyPrelude
+import           ClassyPrelude   hiding (Handler)
 
-import           Control.Lens         ((^.))
-import           Control.Lens.TH      (makeFieldsNoPrefix)
+import           Control.Lens.TH (makeFieldsNoPrefix)
 
-import           Configurable         (Configurable (..), HasConfig (..),
-                                       fetchSetting)
-import qualified Plugin.Logger        as Logger
-import           Plugin.Logger.Config (LoggerConfig)
+import           Configurable    (Configurable (..), fetchSetting)
+import qualified Plugin.Logger   as Logger
 
 
 data ApiConfig
@@ -35,7 +32,7 @@ $(makeFieldsNoPrefix ''ApiRunning)
 instance Configurable ApiConfig where
   type Setting ApiConfig = ApiSetting
   type Running ApiConfig = ApiRunning
-  type Deps ApiConfig = '[LoggerConfig]
+  type Deps ApiConfig = '[Logger.Config]
 
   ready =
     ApiSetting
@@ -44,3 +41,7 @@ instance Configurable ApiConfig where
     <*> fetchSetting "WEB_PROXIED_PORT" 5100
 
   start _ _ = pure ApiRunning
+
+
+newtype AppM env a = AppM { unAppM :: ReaderT env IO a }
+  deriving (Functor, Applicative, Monad, MonadIO, MonadUnliftIO, MonadReader env)
