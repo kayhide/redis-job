@@ -1,8 +1,12 @@
 {-# LANGUAGE DeriveAnyClass #-}
-module App.Api where
+module App.Api
+  ( start
+  )
+where
 
 import           ClassyPrelude
 
+import           Control.Lens              (view)
 import           Data.Aeson                (ToJSON)
 import           Data.Proxy                (Proxy (..))
 import           Lucid
@@ -15,6 +19,13 @@ import           Network.Wai.Handler.Warp  (run)
 import           Servant                   ((:<|>) (..), (:>), Get, JSON, Raw,
                                             Server, Tagged (..), serve)
 import           Servant.HTML.Lucid
+
+import           Configurable              (HasConfig (..))
+
+import qualified Plugin.Logger             as Logger
+
+import           App.Api.Config            (ApiConfig, port, proxiedHost,
+                                            proxiedPort)
 
 
 -- * Models
@@ -45,7 +56,7 @@ appServer = pure index'
   where
     index' = p_ $ do
       "You can get either a "
-      p_ [href_ "cat"] "cat"
+      a_ [href_ "cat"] "cat"
       " or a "
       a_ [href_ "dog"] "dog"
       "."
@@ -55,19 +66,24 @@ appServer = pure index'
 type API'
   = API :<|> Raw
 
--- * Proxy server
 
-createProxyServer :: IO Application
-createProxyServer =
-  waiProxyTo forwardRequest defaultOnExc <$> newManager defaultManagerSettings
+createProxyServer
+  :: (HasConfig env ApiConfig, MonadReader env m, MonadIO m)
+  => m Application
+createProxyServer = do
+  host' <- view $ setting @_ @ApiConfig . proxiedHost
+  port' <- view $ setting @_ @ApiConfig . proxiedPort
+  liftIO $
+    waiProxyTo (forwardRequest host' port') defaultOnExc <$> newManager defaultManagerSettings
   where
-    forwardRequest :: Request -> IO WaiProxyResponse
-    forwardRequest _ = pure $ WPRProxyDest $ ProxyDest "127.0.0.1" 5100
+    forwardRequest :: Text -> Int -> Request -> IO WaiProxyResponse
+    forwardRequest host' port' _ = pure $ WPRProxyDest $ ProxyDest (encodeUtf8 host') port'
 
--- * Starting proxy server with take over APIs
-
-startApp :: IO ()
-startApp = do
+start
+  :: (HasConfig env ApiConfig, HasConfig env Logger.Config, MonadReader env m, MonadIO m)
+  => m ()
+start = do
   proxyServer <- createProxyServer
-  run 8080 $ serve (Proxy @API') $ appServer :<|> Tagged proxyServer
-
+  port' <- view $ setting @_ @ApiConfig . port
+  Logger.info $ "Server is up at localhost:" <> tshow port'
+  liftIO $ run port' $ serve (Proxy @API') $ appServer :<|> Tagged proxyServer

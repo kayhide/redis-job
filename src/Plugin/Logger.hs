@@ -9,6 +9,8 @@ import           Configurable         (HasConfig (..))
 import           Plugin.Logger.Config
 
 
+type Config = LoggerConfig
+
 debug
   :: (HasConfig env LoggerConfig, MonadReader env m, MonadIO m)
   => Text
