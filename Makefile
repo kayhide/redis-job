@@ -18,9 +18,14 @@ worker:
 	$$(make envs) && cd rb && bundle exec sidekiq -C config/sidekiq.yml
 .PHONY: worker
 
-infra:
-	docker-compose up
-.PHONY: infra
+infra-up:
+	docker-compose up -d
+.PHONY: infra-up
+
+infra-down:
+	docker-compose down
+.PHONY: infra-down
+
 
 envs:
 	@echo "export DB_DATABASE=rb_development"
