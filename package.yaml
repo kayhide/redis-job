@@ -84,7 +84,17 @@ default-extensions:
   - TypeSynonymInstances
   - ViewPatterns
 
+library:
+  source-dirs: src
+
 executables:
-  redis-job:
-    source-dirs:      src
-    main:             Main.hs
+  worker:
+    main:                Main.hs
+    source-dirs:         app/worker
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - redis-job
+

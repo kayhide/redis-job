@@ -2,26 +2,28 @@ module DevMain where
 
 import           ClassyPrelude
 
-import qualified Data.Aeson       as Aeson
+import qualified Data.Aeson        as Aeson
 import           Database.Persist
-import qualified Database.Redis   as Redis
+import qualified Database.Redis    as Redis
 
-import           App.Config       (AppConfig, activate')
-import           App.Job.TrainJob
+import qualified Plugin.Db         as Db
+import qualified Plugin.Logger     as Logger
+import qualified Plugin.Redis      as Redis
+import           Plugin.Sidekiq    (JobWrapper)
+import qualified Plugin.Sidekiq    as Sidekiq
+
 import           Model.Entities
-import qualified Plugin.Db        as Db
-import qualified Plugin.Logger    as Logger
-import qualified Plugin.Redis     as Redis
-import           Plugin.Sidekiq   (JobWrapper)
-import qualified Plugin.Sidekiq   as Sidekiq
+import           App.Job.TrainJob
+import qualified Config
+
 
 run :: IO ()
 run = do
-  config :: AppConfig <- activate'
+  config <- Config.activate'
   runReaderT app config
 
 
-type AppM a = ReaderT AppConfig IO a
+type AppM a = ReaderT Config.Config IO a
 
 app :: AppM ()
 app = do

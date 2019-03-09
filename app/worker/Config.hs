@@ -1,4 +1,4 @@
-module App.Config where
+module Config where
 
 import           ClassyPrelude
 
@@ -12,7 +12,7 @@ import           Plugin.Redis.Config   (RedisConfig)
 import           Plugin.Sidekiq.Config (SidekiqConfig)
 
 
-type AppConfig = AllOf (ToConfigs
+type Config = AllOf (ToConfigs
   '[ LoggerConfig
    , DbConfig
    , RedisConfig
@@ -20,7 +20,7 @@ type AppConfig = AllOf (ToConfigs
    ]
   )
 
-activate' :: IO AppConfig
+activate' :: IO Config
 activate' =
   pure nil
   >>= activate @LoggerConfig

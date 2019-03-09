@@ -2,21 +2,22 @@ module Main where
 
 import           ClassyPrelude
 
-import qualified Data.Aeson           as Aeson
+import qualified Data.Aeson        as Aeson
 
-import           App.Config           (AppConfig, activate')
+import           Plugin.Sidekiq    (JobWrapper)
+import qualified Plugin.Sidekiq    as Sidekiq
+
 import           App.Job.TrainJob
-import           Plugin.Sidekiq       (JobWrapper)
-import qualified Plugin.Sidekiq       as Sidekiq
+import qualified Config
 
 
 main :: IO ()
 main = do
-  config :: AppConfig <- activate'
+  config <- Config.activate'
   runReaderT app config
 
 
-type AppM a = ReaderT AppConfig IO a
+type AppM a = ReaderT Config.Config IO a
 
 app :: AppM ()
 app =
