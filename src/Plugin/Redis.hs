@@ -2,19 +2,21 @@ module Plugin.Redis where
 
 import ClassyPrelude
 
-import Control.Lens ((^.))
+import Control.Lens (view)
 import Database.Redis as Redis
 
 import Configurable (HasConfig (..))
 import Plugin.Redis.Config
 
 
+type Config = RedisConfig
+
 run
   :: (HasConfig env RedisConfig, MonadReader env m, MonadIO m)
   => Redis.Redis a
   -> m a
 run redis = do
-  conn' <- asks (^. running @_ @RedisConfig . conn)
+  conn' <- view $ running @_ @RedisConfig . conn
   liftIO $ Redis.runRedis conn' redis
 
 brpop :: (RedisCtx m f)

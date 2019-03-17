@@ -7,7 +7,7 @@ where
 
 import ClassyPrelude
 
-import Control.Lens ((^.))
+import Control.Lens (view)
 
 import Configurable (HasConfig (..))
 import Plugin.Sidekiq.Config
@@ -21,8 +21,8 @@ watch
   => (ByteString -> Maybe SomeJob)
   -> m a
 watch decode = do
-  chan' <- asks (^. running @_ @SidekiqConfig . channel)
-  jobs' <- asks (^. running @_ @SidekiqConfig . jobs)
+  chan' <- view $ running @_ @SidekiqConfig . channel
+  jobs' <- view $ running @_ @SidekiqConfig . jobs
   liftIO $ do
     forever $ do
       x <- atomically $ readTChan chan'
