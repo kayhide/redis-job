@@ -2,12 +2,13 @@
 {-# LANGUAGE DerivingStrategies #-}
 module App.Job.TrainJob where
 
-import           ClassyPrelude
+import ClassyPrelude
 
-import           Control.Concurrent (threadDelay)
-import           Data.Aeson
+import Control.Concurrent (threadDelay)
+import Data.Aeson
 
-import           Plugin.Sidekiq.Job
+import Plugin.Sidekiq.Job
+
 
 -- * Sample of enqued job json
 -- {

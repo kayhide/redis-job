@@ -5,33 +5,29 @@ module App.Api
   )
 where
 
-import           ClassyPrelude             hiding (Handler)
+import ClassyPrelude hiding (Handler)
 
-import           Control.Lens              (view)
-import           Control.Monad.Except      (ExceptT (..))
-import           Data.Proxy                (Proxy (..))
-import           Lucid
-import           Network.HTTP.Client       (defaultManagerSettings, newManager)
-import           Network.HTTP.ReverseProxy (ProxyDest (..),
-                                            WaiProxyResponse (..), defaultOnExc,
-                                            waiProxyTo)
-import           Network.Wai               (Application, Request)
-import           Network.Wai.Handler.Warp  (run)
-import           Servant                   ((:<|>) (..), (:>), Get,
-                                            Handler (..), JSON, Raw, Server,
-                                            ServerT, Tagged (..), hoistServer,
-                                            serve)
-import           Servant.HTML.Lucid
+import Control.Lens (view)
+import Control.Monad.Except (ExceptT (..))
+import Data.Proxy (Proxy (..))
+import Lucid
+import Network.HTTP.Client (defaultManagerSettings, newManager)
+import Network.HTTP.ReverseProxy (ProxyDest (..), WaiProxyResponse (..),
+                                  defaultOnExc, waiProxyTo)
+import Network.Wai (Application, Request)
+import Network.Wai.Handler.Warp (run)
+import Servant ((:<|>) (..), (:>), Get, Handler (..), JSON, Raw, Server,
+                ServerT, Tagged (..), hoistServer, serve)
+import Servant.HTML.Lucid
 
-import           Configurable              (HasConfig (..))
+import Configurable (HasConfig (..))
 
-import qualified Plugin.Db                 as Db
-import qualified Plugin.Logger             as Logger
+import qualified Plugin.Db as Db
+import qualified Plugin.Logger as Logger
 
-import           App.Api.Config            (ApiConfig, AppM (..), port,
-                                            proxiedHost, proxiedPort)
+import App.Api.Config (ApiConfig, AppM (..), port, proxiedHost, proxiedPort)
 
-import qualified App.Handler.Predictors    as Predictors
+import qualified App.Handler.Predictors as Predictors
 
 -- * API interfaces
 

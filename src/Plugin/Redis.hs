@@ -1,12 +1,12 @@
 module Plugin.Redis where
 
-import           ClassyPrelude
+import ClassyPrelude
 
-import           Control.Lens        ((^.))
-import           Database.Redis      as Redis
+import Control.Lens ((^.))
+import Database.Redis as Redis
 
-import           Configurable        (HasConfig (..))
-import           Plugin.Redis.Config
+import Configurable (HasConfig (..))
+import Plugin.Redis.Config
 
 
 run

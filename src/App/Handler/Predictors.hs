@@ -1,16 +1,16 @@
 module App.Handler.Predictors where
 
-import           ClassyPrelude
+import ClassyPrelude
 
-import           Database.Persist (Entity, selectList)
-import           Servant          ((:<|>) (..), (:>), Get, JSON, Raw, ServerT,
-                                   Tagged (..), serve)
+import Database.Persist (Entity, selectList)
+import Servant ((:<|>) (..), (:>), Get, JSON, Raw, ServerT, Tagged (..), serve)
 
-import           Configurable     (HasConfig)
+import Configurable (HasConfig)
 
-import           App.Api.Config   (AppM)
-import           Model.Predictor
-import qualified Plugin.Db        as Db
+import App.Api.Config (AppM)
+import Model.Predictor
+import qualified Plugin.Db as Db
+
 
 type API
   = Get '[JSON] [Entity Predictor]

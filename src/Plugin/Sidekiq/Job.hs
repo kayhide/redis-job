@@ -3,10 +3,10 @@
 {-# LANGUAGE UndecidableInstances   #-}
 module Plugin.Sidekiq.Job where
 
-import           ClassyPrelude
+import ClassyPrelude
 
-import           Data.Aeson
-import           Data.Time.Clock.POSIX (posixSecondsToUTCTime)
+import Data.Aeson
+import Data.Time.Clock.POSIX (posixSecondsToUTCTime)
 
 -- * Sample of enqued job json
 -- {

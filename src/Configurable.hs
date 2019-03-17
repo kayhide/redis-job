@@ -3,13 +3,13 @@
 {-# LANGUAGE UndecidableInstances   #-}
 module Configurable where
 
-import           ClassyPrelude
+import ClassyPrelude
 
-import           Control.Lens          (Lens')
-import           Data.Extensible       (Forall, Member (..), item)
-import           Data.Extensible.Plain (AllOf, (<%))
-import           Data.Proxy            (Proxy (..))
-import           System.Environment    (lookupEnv)
+import Control.Lens (Lens')
+import Data.Extensible (Forall, Member (..), item)
+import Data.Extensible.Plain (AllOf, (<%))
+import Data.Proxy (Proxy (..))
+import System.Environment (lookupEnv)
 
 
 class Configurable (a :: *) where

@@ -1,8 +1,8 @@
 module Main where
 
-import           ClassyPrelude
+import ClassyPrelude
 
-import qualified App.Api       as Api
+import qualified App.Api as Api
 
 import qualified Config
 

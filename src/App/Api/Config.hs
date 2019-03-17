@@ -1,12 +1,12 @@
 {-# LANGUAGE TemplateHaskell #-}
 module App.Api.Config where
 
-import           ClassyPrelude   hiding (Handler)
+import ClassyPrelude hiding (Handler)
 
-import           Control.Lens.TH (makeFieldsNoPrefix)
+import Control.Lens.TH (makeFieldsNoPrefix)
 
-import           Configurable    (Configurable (..), fetchSetting)
-import qualified Plugin.Logger   as Logger
+import Configurable (Configurable (..), fetchSetting)
+import qualified Plugin.Logger as Logger
 
 
 data ApiConfig

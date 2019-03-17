@@ -3,13 +3,12 @@
 {-# LANGUAGE TemplateHaskell    #-}
 module Plugin.Logger.Config where
 
-import           ClassyPrelude
+import ClassyPrelude
 
-import           Control.Lens.TH      (makeFieldsNoPrefix)
-import           Control.Monad.Logger
+import Control.Lens.TH (makeFieldsNoPrefix)
+import Control.Monad.Logger
 
-import           Configurable         (Configurable (..), FetchSetting,
-                                       fetchSetting)
+import Configurable (Configurable (..), FetchSetting, fetchSetting)
 
 
 data LoggerConfig

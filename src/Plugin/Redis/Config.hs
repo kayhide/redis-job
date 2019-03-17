@@ -1,13 +1,13 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Plugin.Redis.Config where
 
-import           ClassyPrelude
+import ClassyPrelude
 
-import           Control.Lens.TH (makeFieldsNoPrefix)
-import           Database.Redis  (ConnectInfo, Connection, checkedConnect,
-                                  parseConnectInfo)
+import Control.Lens.TH (makeFieldsNoPrefix)
+import Database.Redis (ConnectInfo, Connection, checkedConnect,
+                       parseConnectInfo)
 
-import           Configurable    (Configurable (..), fetchSetting)
+import Configurable (Configurable (..), fetchSetting)
 
 
 data RedisConfig

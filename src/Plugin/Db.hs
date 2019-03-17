@@ -1,12 +1,12 @@
 module Plugin.Db where
 
-import           ClassyPrelude
+import ClassyPrelude
 
-import           Control.Lens         ((^.))
-import           Database.Persist.Sql
+import Control.Lens ((^.))
+import Database.Persist.Sql
 
-import           Configurable         (HasConfig (..))
-import           Plugin.Db.Config
+import Configurable (HasConfig (..))
+import Plugin.Db.Config
 
 
 type Config = DbConfig

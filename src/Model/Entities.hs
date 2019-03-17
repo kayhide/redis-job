@@ -1,12 +1,11 @@
-{-# LANGUAGE QuasiQuotes                #-}
-{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE QuasiQuotes     #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Model.Entities where
 
-import           ClassyPrelude
+import ClassyPrelude
 
-import           Database.Persist.Postgresql
-import           Database.Persist.Quasi
-import           Database.Persist.TH
+import Database.Persist.Postgresql
+import Database.Persist.TH
 
 share [mkPersist sqlSettings, mkSave "modelEntities"] [persistLowerCase|
 Predictor json sql=predictors

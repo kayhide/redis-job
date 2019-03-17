@@ -3,6 +3,6 @@ module Model.Predictor
   )
 where
 
-import           ClassyPrelude
+import ClassyPrelude
 
-import           Model.Entities
+import Model.Entities

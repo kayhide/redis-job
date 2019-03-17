@@ -5,13 +5,13 @@ module Plugin.Sidekiq
   )
 where
 
-import           ClassyPrelude
+import ClassyPrelude
 
-import           Control.Lens          ((^.))
+import Control.Lens ((^.))
 
-import           Configurable          (HasConfig (..))
-import           Plugin.Sidekiq.Config
-import           Plugin.Sidekiq.Job
+import Configurable (HasConfig (..))
+import Plugin.Sidekiq.Config
+import Plugin.Sidekiq.Job
 
 watch
   :: ( HasConfig env SidekiqConfig

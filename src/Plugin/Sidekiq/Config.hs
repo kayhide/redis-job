@@ -1,18 +1,17 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Plugin.Sidekiq.Config where
 
-import           ClassyPrelude
+import ClassyPrelude
 
-import           Control.Lens         ((^.))
-import           Control.Lens.TH      (makeFieldsNoPrefix)
+import Control.Lens ((^.))
+import Control.Lens.TH (makeFieldsNoPrefix)
 
-import           Configurable         (Configurable (..), HasConfig (..),
-                                       fetchSetting)
-import qualified Plugin.Logger        as Logger
-import           Plugin.Logger.Config (LoggerConfig)
-import qualified Plugin.Redis         as Redis
-import           Plugin.Redis.Config  (RedisConfig, info)
-import           Plugin.Sidekiq.Job
+import Configurable (Configurable (..), HasConfig (..), fetchSetting)
+import qualified Plugin.Logger as Logger
+import Plugin.Logger.Config (LoggerConfig)
+import qualified Plugin.Redis as Redis
+import Plugin.Redis.Config (RedisConfig, info)
+import Plugin.Sidekiq.Job
 
 
 data SidekiqConfig

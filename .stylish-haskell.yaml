@@ -5,7 +5,7 @@ steps:
       records: true
 
   - imports:
-      align: global
+      align: none
       list_align: after_alias
       pad_module_names: true
       long_list_align: inline

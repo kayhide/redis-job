@@ -1,12 +1,12 @@
 module Main where
 
-import           ClassyPrelude
+import ClassyPrelude
 
-import qualified Data.Aeson       as Aeson
+import qualified Data.Aeson as Aeson
 
-import           App.Job.TrainJob
-import           Plugin.Sidekiq   (JobWrapper)
-import qualified Plugin.Sidekiq   as Sidekiq
+import App.Job.TrainJob
+import Plugin.Sidekiq (JobWrapper)
+import qualified Plugin.Sidekiq as Sidekiq
 
 import qualified Config
 
