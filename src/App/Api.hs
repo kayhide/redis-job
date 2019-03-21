@@ -10,7 +10,6 @@ import ClassyPrelude hiding (Handler)
 import Control.Lens (view)
 import Control.Monad.Except (ExceptT (..))
 import Data.Proxy (Proxy (..))
-import Lucid
 import Network.HTTP.Client (defaultManagerSettings, newManager)
 import Network.HTTP.ReverseProxy (ProxyDest (..), WaiProxyResponse (..),
                                   defaultOnExc, waiProxyTo)
@@ -18,7 +17,6 @@ import Network.Wai (Application, Request)
 import Network.Wai.Handler.Warp (run)
 import Servant ((:<|>) (..), (:>), Get, Handler (..), JSON, Raw, Server,
                 ServerT, Tagged (..), hoistServer, serve)
-import Servant.HTML.Lucid
 
 import Configurable (HasConfig (..))
 
@@ -32,8 +30,7 @@ import qualified App.Handler.Predictors as Predictors
 -- * API interfaces
 
 type API
-  = Get '[HTML] (Html ())
-  :<|> ("predictors" :> Predictors.API)
+  = "api" :> ("predictors" :> Predictors.API)
 
 
 -- * API implementations
@@ -45,13 +42,7 @@ appServer
       HasConfig env Db.Config
      )
   => ServerT API (AppM env)
-appServer = pure index'
-  :<|> Predictors.handlers
-  where
-    index' = p_ $ do
-      "You can get either a "
-      a_ [href_ "predictors"] "predictors"
-      "."
+appServer = Predictors.handlers
 
 -- * Wrapping API interface
 
