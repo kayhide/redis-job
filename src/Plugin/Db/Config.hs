@@ -1,13 +1,15 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE UndecidableInstances  #-}
 module Plugin.Db.Config where
 
 import ClassyPrelude
 
 import Control.Lens.TH (makeFieldsNoPrefix)
 import Control.Monad.Logger
-import Data.Pool (Pool)
-import Database.Persist.Postgresql
+import Data.Pool (Pool, createPool)
+import Database.Selda.Backend (SeldaConnection, seldaClose)
+import Database.Selda.PostgreSQL (pgOpen')
 
 import Configurable (Configurable (..), fetchSetting)
 
@@ -24,7 +26,7 @@ data DbSetting = DbSetting
   deriving (Eq, Show)
 
 data DbRunning = DbRunning
-  { _pool :: Pool SqlBackend
+  { _pool :: Pool SeldaConnection
   }
 
 instance Show DbRunning where
@@ -56,5 +58,5 @@ instance Configurable DbConfig where
           <> " dbname=" <> database'
           <> " user=" <> user'
           <> " port=" <> port'
-    pool'' <- runStdoutLoggingT $ createPostgresqlPool (encodeUtf8 connstr) pool'
+    pool'' <- createPool (pgOpen' Nothing (encodeUtf8 connstr)) seldaClose 4 1 pool'
     pure $ DbRunning pool''
