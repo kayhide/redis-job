@@ -48,6 +48,8 @@ dependencies:
   - servant-server
   - lucid
   - servant-lucid
+  - selda
+  - selda-postgresql
 
 default-extensions:
   - AutoDeriveTypeable

@@ -6,6 +6,9 @@ import Configurable (ToConfig, running)
 import Control.Lens (view)
 import Data.Extensible ((:*), Member)
 import Database.Persist.Sql
+import Database.Selda
+import Database.Selda.Backend (runSeldaT)
+import Data.Pool (withResource)
 import Plugin.Db.Config
 
 
@@ -14,10 +17,12 @@ type Config = DbConfig
 run
   :: ( Member xs Config
      , MonadReader (ToConfig :* xs) m
-     , MonadUnliftIO m
+     , MonadIO m
+     , MonadMask m
      )
-  => ReaderT SqlBackend m a
+  => SeldaT m a
   -> m a
 run sql = do
-  pool' <- view $ running @_ @Config . pool
-  runSqlPool sql pool'
+  pool' <- view $ running @_ @DbConfig . pool
+  conn' <- liftIO $ withResource pool' pure
+  runSeldaT sql conn'
