@@ -4,6 +4,7 @@ module App.Api.Config where
 import ClassyPrelude hiding (Handler)
 
 import Control.Lens.TH (makeFieldsNoPrefix)
+import Control.Monad.Catch (MonadCatch, MonadMask, MonadThrow)
 
 import Configurable (Configurable (..), fetchSetting)
 import qualified Plugin.Logger as Logger
@@ -44,4 +45,14 @@ instance Configurable ApiConfig where
 
 
 newtype AppM env a = AppM { unAppM :: ReaderT env IO a }
-  deriving (Functor, Applicative, Monad, MonadIO, MonadUnliftIO, MonadReader env)
+  deriving
+    ( Functor
+    , Applicative
+    , Monad
+    , MonadIO
+    , MonadUnliftIO
+    , MonadCatch
+    , MonadThrow
+    , MonadMask
+    , MonadReader env
+    )

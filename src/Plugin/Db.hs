@@ -1,14 +1,18 @@
-module Plugin.Db where
+module Plugin.Db
+  ( Config
+  , run
+  )
+where
 
 import ClassyPrelude
 
 import Configurable (ToConfig, running)
 import Control.Lens (view)
 import Data.Extensible ((:*), Member)
+import Data.Pool (withResource)
 import Database.Persist.Sql
 import Database.Selda
 import Database.Selda.Backend (runSeldaT)
-import Data.Pool (withResource)
 import Plugin.Db.Config
 
 

@@ -17,10 +17,12 @@ dependencies:
   - bytestring
   - classy-prelude
   - containers
+  - data-default
   - deepseq
   - directory
   - exceptions
   - filepath
+  - generic-lens
   - mtl
   - primitive
   - stm
@@ -45,11 +47,13 @@ dependencies:
   - http-reverse-proxy
   - wai
   - warp
+  - servant
   - servant-server
   - lucid
   - servant-lucid
   - selda
   - selda-postgresql
+  - http-api-data
 
 default-extensions:
   - AutoDeriveTypeable
