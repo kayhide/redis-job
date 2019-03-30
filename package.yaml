@@ -17,6 +17,7 @@ dependencies:
   - bytestring
   - classy-prelude
   - containers
+  - data-default
   - deepseq
   - directory
   - exceptions
@@ -45,11 +46,13 @@ dependencies:
   - http-reverse-proxy
   - wai
   - warp
+  - servant
   - servant-server
   - lucid
   - servant-lucid
-  - selda
-  - selda-postgresql
+  - beam-core
+  - beam-postgres
+  - http-api-data
 
 default-extensions:
   - AutoDeriveTypeable

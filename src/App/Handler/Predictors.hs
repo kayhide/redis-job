@@ -1,14 +1,20 @@
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedLabels #-}
 module App.Handler.Predictors where
 
-import ClassyPrelude
+import ClassyPrelude hiding (delete)
 
-import Control.Lens ((&), (.~))
-import Data.Extensible
-import Database.Persist (Entity (..), getJust, getJustEntity, insertEntity,
-                         replace, selectList)
+import Control.Lens ((&), (.~), (^.))
+import Data.Aeson
+import Data.Maybe (fromJust)
+import Data.Time.LocalTime (LocalTime, utc, utcToLocalTime)
+import Database.Beam
+import Database.Beam.Backend.SQL.BeamExtensions (runInsertReturningList)
+import Database.Beam.Query ((==.))
 import Servant ((:<|>) (..), (:>), Capture, Get, JSON, Patch, Post, ReqBody,
                 ServerT)
+import Servant.API.Verbs (DeleteNoContent)
 
 import Configurable (HasConfig)
 
@@ -16,78 +22,103 @@ import App.Api.Config (AppM)
 import Model.Predictor
 import qualified Plugin.Db as Db
 
+data ApplicationDb f =
+  ApplicationDb
+  { _predictors :: f  (TableEntity PredictorT) }
+  deriving (Generic, Database be)
+
+applicationDb :: DatabaseSettings be ApplicationDb
+applicationDb = defaultDbSettings
+
+ApplicationDb predictors = applicationDb
 
 
-type PredictorCreating =
-  Record
-  '[ "predictorTrainingSet" >: Text
-   , "predictorTrainNet"    >: Text
-   , "predictorTestSet"     >: Text
-   , "predictorPredictNet"  >: Text
-   ]
+data PredictorCreating =
+  PredictorCreating
+  { training_set :: Text
+  , test_set     :: Text
+  , train_net    :: Text
+  , predict_net  :: Text
+  }
+  deriving (Eq, Show, Generic, ToJSON, FromJSON)
 
-type PredictorUpdatingFields =
-  '[ "predictorTrainingSet" >: Text
-   , "predictorTrainNet"    >: Text
-   , "predictorTestSet"     >: Text
-   , "predictorPredictNet"  >: Text
-   ]
-
-type PredictorUpdating =
-  Record PredictorUpdatingFields
+data PredictorUpdating =
+  PredictorUpdating
+  { training_set :: Text
+  , test_set     :: Text
+  , train_net    :: Text
+  , predict_net  :: Text
+  }
+  deriving (Eq, Show, Generic, ToJSON, FromJSON)
 
 type API
-  = Get '[JSON] [Entity Predictor]
-  :<|> ReqBody '[JSON] PredictorCreating :> Post '[JSON] (Entity Predictor)
-  :<|> Capture "predictorId" PredictorId :> Get '[JSON] (Entity Predictor)
-  :<|> Capture "predictorId" PredictorId :> ReqBody '[JSON] PredictorUpdating :> Patch '[JSON] (Entity Predictor)
+  = Get '[JSON] [Predictor]
+  :<|> ReqBody '[JSON] PredictorCreating :> Post '[JSON] Predictor
+  :<|> Capture "predictorId" PredictorId :> Get '[JSON] Predictor
+  :<|> Capture "predictorId" PredictorId :> ReqBody '[JSON] PredictorUpdating :> Patch '[JSON] Predictor
+  :<|> Capture "predictorId" PredictorId :> DeleteNoContent '[JSON] ()
 
 handlers :: (HasConfig env Db.Config) => ServerT API (AppM env)
-handlers = index' :<|> create' :<|> show' :<|> update'
+handlers = index' :<|> create' :<|> show' :<|> update' :<|> destroy'
 
 
 index'
   :: (HasConfig env Db.Config)
-  => AppM env [Entity Predictor]
+  => AppM env [Predictor]
 index' =
-  Db.run $ selectList [] []
+  Db.run $
+  runSelectReturningList $ select $ all_ predictors
 
 
 create'
   :: (HasConfig env Db.Config)
-  => PredictorCreating -> AppM env (Entity Predictor)
-create' creating' = do
-  now <- liftIO getCurrentTime
-  let item'' = shrink
-        $ #predictorTrainedAt @= (Nothing :: Maybe UTCTime)
-        <: #predictorTestedAt @= (Nothing :: Maybe UTCTime)
-        <: #predictorCreatedAt @= now
-        <: #predictorUpdatedAt @= now
-        <: creating'
-
-  Db.run $ insertEntity (fromRecord item'')
+  => PredictorCreating -> AppM env Predictor
+create' creating'@PredictorCreating {..} = do
+  now :: LocalTime <- utcToLocalTime utc <$> liftIO getCurrentTime
+  fmap headEx $ Db.run $
+    runInsertReturningList $ insert predictors $ insertExpressions [
+    Predictor
+      default_
+      (val_ training_set)
+      (val_ test_set)
+      (val_ train_net)
+      (val_ predict_net)
+      (val_ Nothing)
+      (val_ Nothing)
+      (val_ now)
+      (val_ now)
+    ]
 
 
 show'
   :: (HasConfig env Db.Config)
-  => PredictorId -> AppM env (Entity Predictor)
+  => PredictorId -> AppM env Predictor
 show' id' =
-  Db.run $ getJustEntity id'
+  fmap fromJust $ Db.run $
+    runSelectReturningOne $ lookup_ predictors id'
 
 
 update'
   :: (HasConfig env Db.Config)
-  => PredictorId -> PredictorUpdating -> AppM env (Entity Predictor)
-update' id' updating' = do
-  item' <- toRecord <$> Db.run (getJust id')
-  now <- liftIO getCurrentTime
+  => PredictorId -> PredictorUpdating -> AppM env Predictor
+update' id' updating'@PredictorUpdating {..} = do
+  predictor' <- show' id'
+  now :: LocalTime <- utcToLocalTime utc <$> liftIO getCurrentTime
+  let predictor'' = predictor'
+        { _training_set = training_set
+        , _test_set = test_set
+        , _train_net = train_net
+        , _predict_net = predict_net
+        , _updated_at = now
+        } :: Predictor
+  Db.run $ runUpdate $
+    save predictors predictor''
+  pure predictor''
 
-  let item'' =
-        hfoldlWithIndex apply' item' (wrench updating')
-        & #predictorUpdatedAt .~ now
-  let record' = fromRecord item''
-  Db.run $ replace id' record'
-  pure (Entity id' record')
 
-apply' :: Membership xs x -> Record xs -> Nullable (Field Identity) x -> Record xs
-apply' m item' (Nullable f) = maybe id (pieceAt m .~) f item'
+destroy'
+  :: (HasConfig env Db.Config)
+  => PredictorId -> AppM env ()
+destroy' (PredictorId id') =
+  Db.run $ runDelete $ delete predictors $ \p -> _id p ==. val_ id'
+

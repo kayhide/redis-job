@@ -16,7 +16,7 @@ steps:
 
   - language_pragmas:
       style: vertical
-      align: true
+      align: false
       remove_redundant: true
 
   - trailing_whitespace: {}

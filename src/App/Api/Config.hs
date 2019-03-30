@@ -3,6 +3,7 @@ module App.Api.Config where
 
 import ClassyPrelude hiding (Handler)
 
+import Control.Monad.Fail
 import Control.Lens.TH (makeFieldsNoPrefix)
 
 import Configurable (Configurable (..), fetchSetting)
@@ -44,4 +45,12 @@ instance Configurable ApiConfig where
 
 
 newtype AppM env a = AppM { unAppM :: ReaderT env IO a }
-  deriving (Functor, Applicative, Monad, MonadIO, MonadUnliftIO, MonadReader env)
+  deriving
+    ( Functor
+    , Applicative
+    , Monad
+    , MonadIO
+    , MonadUnliftIO
+    , MonadFail
+    , MonadReader env
+    )

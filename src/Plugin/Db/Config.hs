@@ -8,8 +8,8 @@ import ClassyPrelude
 import Control.Lens.TH (makeFieldsNoPrefix)
 import Control.Monad.Logger
 import Data.Pool (Pool, createPool)
-import Database.Selda.Backend (SeldaConnection, seldaClose)
-import Database.Selda.PostgreSQL (pgOpen')
+import Database.Beam
+import Database.Beam.Postgres
 
 import Configurable (Configurable (..), fetchSetting)
 
@@ -26,7 +26,7 @@ data DbSetting = DbSetting
   deriving (Eq, Show)
 
 data DbRunning = DbRunning
-  { _pool :: Pool SeldaConnection
+  { _pool :: Pool Connection
   }
 
 instance Show DbRunning where
@@ -58,5 +58,5 @@ instance Configurable DbConfig where
           <> " dbname=" <> database'
           <> " user=" <> user'
           <> " port=" <> port'
-    pool'' <- createPool (pgOpen' Nothing (encodeUtf8 connstr)) seldaClose 4 1 pool'
+    pool'' <- createPool (connectPostgreSQL (encodeUtf8 connstr)) close 4 1 pool'
     pure $ DbRunning pool''
