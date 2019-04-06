@@ -1,4 +1,4 @@
-{-# LANGUAGE QuasiQuotes     #-}
+{-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Model.Entities where
 

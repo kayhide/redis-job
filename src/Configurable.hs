@@ -1,6 +1,4 @@
-{-# LANGUAGE TypeFamilyDependencies #-}
-{-# LANGUAGE TypeOperators          #-}
-{-# LANGUAGE UndecidableInstances   #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Configurable where
 
 import ClassyPrelude

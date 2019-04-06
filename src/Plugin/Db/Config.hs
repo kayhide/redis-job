@@ -1,5 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Plugin.Db.Config where
 
 import ClassyPrelude

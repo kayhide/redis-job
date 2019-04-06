@@ -1,6 +1,4 @@
-{-# LANGUAGE DerivingStrategies     #-}
-{-# LANGUAGE TypeFamilyDependencies #-}
-{-# LANGUAGE UndecidableInstances   #-}
+{-# LANGUAGE UndecidableInstances #-}
 module Plugin.Sidekiq.Job where
 
 import ClassyPrelude

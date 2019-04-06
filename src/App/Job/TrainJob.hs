@@ -1,5 +1,4 @@
-{-# LANGUAGE DeriveAnyClass     #-}
-{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DeriveAnyClass #-}
 module App.Job.TrainJob where
 
 import ClassyPrelude
