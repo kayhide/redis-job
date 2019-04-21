@@ -4,12 +4,11 @@ module Plugin.Db.Config where
 
 import ClassyPrelude
 
+import Configurable (Configurable (..), fetchSetting)
 import Control.Lens.TH (makeFieldsNoPrefix)
 import Control.Monad.Logger
 import Data.Pool (Pool)
 import Database.Persist.Postgresql
-
-import Configurable (Configurable (..), fetchSetting)
 
 
 data DbConfig

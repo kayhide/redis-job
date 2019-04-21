@@ -3,10 +3,13 @@ module Plugin.Sidekiq.Config where
 
 import ClassyPrelude
 
+import Configurable (Configurable (..), ToConfig, fetchSetting, running,
+                     setting)
 import Control.Lens (view, (^.))
 import Control.Lens.TH (makeFieldsNoPrefix)
-
-import Configurable (Configurable (..), HasConfig (..), fetchSetting)
+import Data.Extensible ((:*), Member)
+import Data.Extensible.Plain (AllOf, pluck, (<%))
+import Data.Extensible.Tangle (hitchAt)
 import qualified Plugin.Logger as Logger
 import qualified Plugin.Redis as Redis
 import Plugin.Sidekiq.Job
@@ -64,9 +67,9 @@ instance Configurable SidekiqConfig where
         performNow job'
 
 watch'
-  :: ( HasConfig env Logger.Config
-     , HasConfig env Redis.Config
-     , MonadReader env m
+  :: ( Member xs Logger.Config
+     , Member xs Redis.Config
+     , MonadReader (ToConfig :* xs) m
      , MonadIO m
      )
   => SidekiqSetting
@@ -91,7 +94,3 @@ getQueues setting' = ((namespace' <> ":queue:") <>) <$> queues'
   where
   namespace' = setting' ^. namespace
   queues' = setting' ^. queues
-
-askQueues :: (HasConfig env SidekiqConfig, MonadReader env m, MonadIO m) => m [Text]
-askQueues = do
-  getQueues <$> view (setting @_ @SidekiqConfig)

@@ -3,11 +3,10 @@ module Plugin.Redis.Config where
 
 import ClassyPrelude
 
+import Configurable (Configurable (..), fetchSetting)
 import Control.Lens.TH (makeFieldsNoPrefix)
 import Database.Redis (ConnectInfo, Connection, checkedConnect,
                        parseConnectInfo)
-
-import Configurable (Configurable (..), fetchSetting)
 
 
 data RedisConfig

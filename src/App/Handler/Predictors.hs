@@ -3,18 +3,16 @@ module App.Handler.Predictors where
 
 import ClassyPrelude
 
+import App.Api.Config (AppM)
+import Configurable (ToConfig)
 import Control.Lens ((&), (.~))
 import Data.Extensible
 import Database.Persist (Entity (..), getJust, getJustEntity, insertEntity,
                          replace, selectList)
-import Servant ((:<|>) (..), (:>), Capture, Get, JSON, Patch, Post, ReqBody,
-                ServerT)
-
-import Configurable (HasConfig)
-
-import App.Api.Config (AppM)
 import Model.Predictor
 import qualified Plugin.Db as Db
+import Servant ((:<|>) (..), (:>), Capture, Get, JSON, Patch, Post, ReqBody,
+                ServerT)
 
 
 
@@ -42,19 +40,27 @@ type API
   :<|> Capture "predictorId" PredictorId :> Get '[JSON] (Entity Predictor)
   :<|> Capture "predictorId" PredictorId :> ReqBody '[JSON] PredictorUpdating :> Patch '[JSON] (Entity Predictor)
 
-handlers :: (HasConfig env Db.Config) => ServerT API (AppM env)
+handlers
+  :: ( Member xs Db.Config
+     , env ~ (ToConfig :* xs)
+     )
+  => ServerT API (AppM env)
 handlers = index' :<|> create' :<|> show' :<|> update'
 
 
 index'
-  :: (HasConfig env Db.Config)
+  :: ( Member xs Db.Config
+     , env ~ (ToConfig :* xs)
+     )
   => AppM env [Entity Predictor]
 index' =
   Db.run $ selectList [] []
 
 
 create'
-  :: (HasConfig env Db.Config)
+  :: ( Member xs Db.Config
+     , env ~ (ToConfig :* xs)
+     )
   => PredictorCreating -> AppM env (Entity Predictor)
 create' creating' = do
   now <- liftIO getCurrentTime
@@ -69,14 +75,18 @@ create' creating' = do
 
 
 show'
-  :: (HasConfig env Db.Config)
+  :: ( Member xs Db.Config
+     , env ~ (ToConfig :* xs)
+     )
   => PredictorId -> AppM env (Entity Predictor)
 show' id' =
   Db.run $ getJustEntity id'
 
 
 update'
-  :: (HasConfig env Db.Config)
+  :: ( Member xs Db.Config
+     , env ~ (ToConfig :* xs)
+     )
   => PredictorId -> PredictorUpdating -> AppM env (Entity Predictor)
 update' id' updating' = do
   item' <- toRecord <$> Db.run (getJust id')

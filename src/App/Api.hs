@@ -7,25 +7,22 @@ where
 
 import ClassyPrelude hiding (Handler)
 
+import App.Api.Config (ApiConfig, AppM (..), port, proxiedHost, proxiedPort)
+import qualified App.Handler.Predictors as Predictors
+import Configurable (ToConfig, setting)
 import Control.Lens (view)
 import Control.Monad.Except (ExceptT (..))
+import Data.Extensible
 import Data.Proxy (Proxy (..))
 import Network.HTTP.Client (defaultManagerSettings, newManager)
 import Network.HTTP.ReverseProxy (ProxyDest (..), WaiProxyResponse (..),
                                   defaultOnExc, waiProxyTo)
 import Network.Wai (Application, Request)
 import Network.Wai.Handler.Warp (run)
-import Servant ((:<|>) (..), (:>), Get, Handler (..), JSON, Raw, Server,
-                ServerT, Tagged (..), hoistServer, serve)
-
-import Configurable (HasConfig (..))
-
 import qualified Plugin.Db as Db
 import qualified Plugin.Logger as Logger
-
-import App.Api.Config (ApiConfig, AppM (..), port, proxiedHost, proxiedPort)
-
-import qualified App.Handler.Predictors as Predictors
+import Servant ((:<|>) (..), (:>), Handler (..), Raw, ServerT, Tagged (..),
+                hoistServer, serve)
 
 -- * API interfaces
 
@@ -36,10 +33,10 @@ type API
 -- * API implementations
 
 appServer
-  :: forall env.
-     (HasConfig env ApiConfig,
-      HasConfig env Logger.Config,
-      HasConfig env Db.Config
+  :: ( Member xs ApiConfig
+     , Member xs Logger.Config
+     , Member xs Db.Config
+     , env ~ (ToConfig :* xs)
      )
   => ServerT API (AppM env)
 appServer = Predictors.handlers
@@ -51,9 +48,11 @@ type API'
 
 
 createProxyServer
-  :: (HasConfig env ApiConfig,
-      HasConfig env Logger.Config,
-      MonadReader env m, MonadIO m)
+  :: ( Member xs ApiConfig
+     , Member xs Logger.Config
+     , MonadReader (ToConfig :* xs) m
+     , MonadIO m
+     )
   => m Application
 createProxyServer = do
   host' <- view $ setting @_ @ApiConfig . proxiedHost
@@ -67,11 +66,14 @@ createProxyServer = do
 
 
 start
-  :: forall env m.
-     (HasConfig env ApiConfig,
-      HasConfig env Logger.Config,
-      HasConfig env Db.Config,
-      MonadReader env m, MonadIO m)
+  :: forall xs env m.
+     ( Member xs ApiConfig
+     , Member xs Logger.Config
+     , Member xs Db.Config
+     , env ~ (ToConfig :* xs)
+     , MonadReader env m
+     , MonadIO m
+     )
   => env
   -> m ()
 start env = do
@@ -80,7 +82,7 @@ start env = do
   Logger.info $ "Server is up at localhost:" <> tshow port'
   let api = Proxy @API
   let api' = Proxy @API'
-  liftIO $ run port' $ serve api' $ hoistServer api nt appServer :<|> Tagged proxyServer
+  liftIO $ run port' $ serve api' $ hoistServer api nt (appServer @xs) :<|> Tagged proxyServer
 
   where
     nt :: AppM env a -> Handler a

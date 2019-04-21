@@ -1,16 +1,19 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableSuperClasses #-}
 module Configurable where
 
 import ClassyPrelude
 
-import Control.Lens (Lens')
-import Data.Extensible (Forall, Member (..), item)
-import Data.Extensible.Plain (AllOf, (<%))
+import Control.Lens (Field1 (..), Field2 (..), Lens')
+import Data.Extensible ((:*), Comp (..), Forall, Generate, Member (..),
+                        Membership, hgenerate, hitchAt, hlookup, htabulateFor,
+                        inclusion, piece, vacancy)
+import Data.Extensible.Tangle (TangleT, runTangles)
 import Data.Proxy (Proxy (..))
 import System.Environment (lookupEnv)
 
 
-class Configurable (a :: *) where
+class (Generate (Deps a), Forall Configurable (Deps a)) => Configurable (a :: *) where
   type Setting a = r | r -> a
   type Running a = r | r -> a
   type Deps a :: [*]
@@ -18,42 +21,51 @@ class Configurable (a :: *) where
   ready :: IO (Setting a)
 
   start
-    :: ( Forall Configurable (Deps a)
-       , Forall (HasConfig env) (Deps a)
-       , env ~ AllOf confs
-       )
-    => Setting a
-    -> env
+    :: Setting a
+    -> ToConfig :* Deps a
     -> IO (Running a)
 
-class Configurable a => HasConfig env a where
-  setting :: Lens' env (Setting a)
-  running :: Lens' env (Running a)
 
-instance ( Configurable a
-         , Member configs (Setting a)
-         , Member configs (Running a)
-         ) => HasConfig (AllOf configs) a where
-  setting = item (Proxy @(Setting a))
-  running = item (Proxy @(Running a))
+setting :: forall xs a. (Member xs a) => Lens' (ToConfig :* xs) (Setting a)
+setting = piece . _1
 
-type family ToConfigs as = r | r -> as where
-  ToConfigs '[] = '[]
-  ToConfigs (a ': as) = Setting a ': Running a ': ToConfigs as
+running :: forall xs a. (Member xs a) => Lens' (ToConfig :* xs) (Running a)
+running = piece . _2
 
 
-activate
-  :: ( Configurable a
-     , Forall Configurable (Deps a)
-     , Forall (HasConfig env) (Deps a)
-     , env ~ AllOf confs
-     )
-  => env -> IO (AllOf (Setting a ': Running a ': confs))
-activate env = do
-  setting' <- ready
-  running' <- start setting' env
-  pure $ setting' <% running' <% env
+data ToConfig a where
+  ToConfig :: Configurable a => Setting a -> Running a -> ToConfig a
 
+instance (s ~ Setting a) => Field1 (ToConfig a) (ToConfig a) s s where
+  _1 f (ToConfig setting' running') =
+    (\ s' -> ToConfig s' running') <$> f setting'
+
+instance (s ~ Running a) => Field2 (ToConfig a) (ToConfig a) s s where
+  _2 f (ToConfig setting' running') =
+    (\ r' -> ToConfig setting' r') <$> f running'
+
+
+class (Forall (Member xs) (Deps a), Configurable a) => Configurable' xs a
+instance (Forall (Member xs) (Deps a), Configurable a) => Configurable' xs a
+
+activate :: forall xs. (Forall (Configurable' xs) xs) => IO (ToConfig :* xs)
+activate =
+  runTangles
+  ( htabulateFor
+    (Proxy @(Configurable' xs)) $ \_ -> Comp $ activate' inclusion
+  ) vacancy
+
+activate'
+    :: forall xs a.
+       (Configurable a)
+    => Membership xs :* Deps a
+    -> TangleT ToConfig xs IO (ToConfig a)
+activate' xs = do
+  env <- hgenerate (\k -> hitchAt $ hlookup k xs)
+  lift $ do
+    setting' <- ready
+    running' <- start setting' env
+    pure $ ToConfig setting' running'
 
 
 class FetchSetting a where

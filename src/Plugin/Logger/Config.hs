@@ -4,10 +4,9 @@ module Plugin.Logger.Config where
 
 import ClassyPrelude
 
+import Configurable (Configurable (..), FetchSetting, fetchSetting)
 import Control.Lens.TH (makeFieldsNoPrefix)
 import Control.Monad.Logger
-
-import Configurable (Configurable (..), FetchSetting, fetchSetting)
 
 
 data LoggerConfig
