@@ -17,6 +17,7 @@ dependencies:
   - bytestring
   - classy-prelude
   - containers
+  - data-default
   - deepseq
   - directory
   - exceptions

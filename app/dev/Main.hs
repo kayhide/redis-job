@@ -10,6 +10,7 @@ import qualified Plugin.Logger as Logger
 import qualified Plugin.Redis as Redis
 import qualified Plugin.Sidekiq as Sidekiq
 
+import qualified Conduct
 
 type AppDeps =
   '[ Logger.Config
@@ -21,7 +22,7 @@ type AppDeps =
 
 main :: IO ()
 main = do
+  Conduct.main
+
   config <- activate @AppDeps
   runReaderT (Api.start config) config
-
-
