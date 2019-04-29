@@ -1,3 +1,4 @@
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -94,15 +95,29 @@ type PersonNullableOptionalParams =
 -- | Educt inter functor lifting out.
 -- This requires result type which consists of only fields with given functor type.
 
-class ElemF xs f kv where
-  elemF :: proxy kv -> Record xs -> f (AssocValue kv)
+class Wrapper h => ElemF f xs h kv where
+  elemF :: proxy kv -> RecordOf h xs -> Repr h (f (AssocValue kv))
 
-instance Associate (AssocKey kv) (f (AssocValue kv)) xs => ElemF xs f kv where
+instance (Associate (AssocKey kv) (f (AssocValue kv)) xs, Wrapper h) => ElemF f xs h kv where
   elemF _ r = r ^. itemAssoc (Proxy @(AssocKey kv))
 
-educt :: forall f xs ys. Forall (ElemF xs f) ys => Record xs -> RecordOf f ys
-educt r =
-  htabulateFor (Proxy @(ElemF xs f)) $ \m -> Field $ elemF m r
+educt
+  :: forall f xs ys.
+     Forall (ElemF f xs Identity) ys
+  => RecordOf Identity xs
+  -> RecordOf f ys
+educt = educt' id
+
+educt'
+  :: forall f h g xs ys.
+     ( Forall (ElemF f xs h) ys
+     , Wrapper h
+     )
+  => (forall x. Repr h (f x) -> g x)
+  -> RecordOf h xs
+  -> RecordOf g ys
+educt' t r =
+  htabulateFor (Proxy @(ElemF f xs h)) $ \m -> Field $ t $ elemF @f m r
 
 
 -- | Conduct inner functor lifting out.
@@ -127,7 +142,6 @@ instance NullableElemF '["name" >: Required Text, "age" >: Optional Int] Optiona
 
 instance NullableElemF '["name" >: Required Text, "age" >: Optional Int] Optional ("age" >: Int) where
   elemFMay _ r = Nullable $ r ^? #age
-  -- elemFMay _ r = shrinked' ^. #age
   -- elemFMay _ r = _
   --   where
   --     educted' :: (Field Optional) :* '["name" >: Text, "age" >: Int]
