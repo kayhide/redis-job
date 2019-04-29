@@ -127,6 +127,27 @@ instance NullableElemF '["name" >: Required Text, "age" >: Optional Int] Optiona
 
 instance NullableElemF '["name" >: Required Text, "age" >: Optional Int] Optional ("age" >: Int) where
   elemFMay _ r = Nullable $ r ^? #age
+  -- elemFMay _ r = shrinked' ^. #age
+  -- elemFMay _ r = _
+  --   where
+  --     educted' :: (Field Optional) :* '["name" >: Text, "age" >: Int]
+  --     educted' = educt $ shrinked'
+  --     shrinked' :: Nullable (Field Identity) :* '["name" >: Optional Text, "age" >: Optional Int]
+  --     shrinked' = shrink $ wrenched'
+  --     wrenched' :: Nullable (Field Identity) :* (Union '["name" >: Required Text, "age" >: Optional Int] '["name" >: Optional Text, "age" >: Optional Int])
+  --     wrenched' = wrench r
+
+-- |Insert a type into a type list.
+type family Insert a xs where
+    Insert a '[]       = (a ': '[])
+    Insert a (a ': xs) = (a ': xs)
+    Insert a (x ': xs) = x ': (Insert a xs)
+
+
+-- |Set union over type lists.
+type family Union xs ys where
+    Union '[] ys = ys
+    Union (x ': xs) ys = Insert x (Union xs ys)
 
 conduct :: forall f xs ys. Forall (NullableElemF xs f) ys => Record xs -> RecordOf (Nullable f) ys
 conduct r =
