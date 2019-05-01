@@ -1,27 +1,47 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE UndecidableInstances #-}
-module Conduct where
+module Conduct
+  ( educt
+  , conduct
+  , induct
+  -- * Testing
+  , main
+  )
+where
 
 import ClassyPrelude
 
-import Control.Lens ((^.), (^?))
+import Control.Lens ((^.))
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Default (Default (..))
 import Data.Extensible
 
+
 main :: IO ()
 main = do
+  putStrLn "Reqdy..."
   sayShow $ (educt alice :: PersonRequiredParams)
   sayShow $ (educt alice :: PersonOptionalParams)
-  sayShow $ (conduct alice :: PersonNullableRequiredParams)
-  sayShow $ (conduct alice :: PersonNullableOptionalParams)
+  sayShow $ (educt alice :: PersonNullableRequiredParams)
+  sayShow $ (educt alice :: PersonNullableOptionalParams)
   sayShow $ (educt bob :: PersonRequiredParams)
   sayShow $ (educt bob :: PersonOptionalParams)
-  sayShow $ (conduct bob :: PersonNullableRequiredParams)
-  sayShow $ (conduct bob :: PersonNullableOptionalParams)
-  -- sayShow $ conduct @Required alice
+  sayShow $ (educt bob :: PersonNullableRequiredParams)
+  sayShow $ (educt bob :: PersonNullableOptionalParams)
+  sayShow $ (educt alice :: PersonMaybeParams)
+  sayShow $ (educt alice :: PersonMaybeParams)
+  sayShow $ conduct alice
+  sayShow $ conduct bob
+  sayShow girl
+  sayShow $ induct girl $ conduct alice
+
+girl :: Person
+girl
+  = #id @= 8
+  <: #name @= "betty"
+  <: #age  @= 3
+  <: nil
 
 
 alice :: PersonParams
@@ -43,7 +63,6 @@ newtype Required a = Required a
 newtype Optional a = Optional (Maybe a)
   deriving stock (Eq, Show, Generic)
   deriving newtype (FromJSON, ToJSON, Default)
-
 
 instance Wrapper Required where
   type Repr Required x = x
@@ -91,121 +110,101 @@ type PersonNullableOptionalParams =
    , "age" >: Int
    ]
 
+type PersonMaybeParams =
+  RecordOf Maybe
+  '[ "name" >: Text
+   , "age" >: Int
+   ]
 
--- | Educt inter functor lifting out.
--- This requires result type which consists of only fields with given functor type.
 
-class Wrapper h => ElemF f xs h kv where
-  elemF :: proxy kv -> RecordOf h xs -> Repr h (f (AssocValue kv))
-
-instance (Associate (AssocKey kv) (f (AssocValue kv)) xs, Wrapper h) => ElemF f xs h kv where
-  elemF _ r = r ^. itemAssoc (Proxy @(AssocKey kv))
+-- | Lift inner functor of each field.
+-- Functor @f@ is transoformed to @g@ by @Transform f g@ instance.
+-- Output type should be given by a function caller.
 
 educt
-  :: forall f xs ys.
-     Forall (ElemF f xs Identity) ys
-  => RecordOf Identity xs
-  -> RecordOf f ys
-educt = educt' id
-
-educt'
-  :: forall f h g xs ys.
-     ( Forall (ElemF f xs h) ys
-     , Wrapper h
-     )
-  => (forall x. Repr h (f x) -> g x)
-  -> RecordOf h xs
+  :: forall g xs ys.
+     Forall (TransformField g xs) ys
+  => Record xs
   -> RecordOf g ys
-educt' t r =
-  htabulateFor (Proxy @(ElemF f xs h)) $ \m -> Field $ t $ elemF @f m r
+educt r =
+  htabulateFor (Proxy @(TransformField g xs)) $ \m -> Field $ elemF m r
 
 
--- | Conduct inner functor lifting out.
--- This keeps original fields trying to lift as given functor type.
--- Fields with unmatched to the functor will be nullified.
---
--- TODO How can we separate out unmatched fields automatically?
+-- | Specialized version of @educt@ where @f@ = @Maybe@.
+-- @xs@ are mapped while de-functorized.
+-- Thus, output type is infered by itself.
 
-class NullableElemF xs f kv where
-  elemFMay :: proxy kv -> Record xs -> Nullable f (AssocValue kv)
-
--- | The following instances are dispathcing by hand.
-
-instance NullableElemF '["name" >: Required Text, "age" >: Optional Int] Required ("name" >: Text) where
-  elemFMay _ r = Nullable $ r ^? #name
-
-instance NullableElemF '["name" >: Required Text, "age" >: Optional Int] Required ("age" >: Int) where
-  elemFMay _ r = Nullable Nothing
-
-instance NullableElemF '["name" >: Required Text, "age" >: Optional Int] Optional ("name" >: Text) where
-  elemFMay _ r = Nullable Nothing
-
-instance NullableElemF '["name" >: Required Text, "age" >: Optional Int] Optional ("age" >: Int) where
-  elemFMay _ r = Nullable $ r ^? #age
-  -- elemFMay _ r = _
-  --   where
-  --     educted' :: (Field Optional) :* '["name" >: Text, "age" >: Int]
-  --     educted' = educt $ shrinked'
-  --     shrinked' :: Nullable (Field Identity) :* '["name" >: Optional Text, "age" >: Optional Int]
-  --     shrinked' = shrink $ wrenched'
-  --     wrenched' :: Nullable (Field Identity) :* (Union '["name" >: Required Text, "age" >: Optional Int] '["name" >: Optional Text, "age" >: Optional Int])
-  --     wrenched' = wrench r
-
--- |Insert a type into a type list.
-type family Insert a xs where
-    Insert a '[]       = (a ': '[])
-    Insert a (a ': xs) = (a ': xs)
-    Insert a (x ': xs) = x ': (Insert a xs)
+conduct
+  :: ( g ~ Maybe
+     , ys ~ DefunctorAssoc xs
+     , Forall (TransformField g xs) ys
+     )
+  => Record xs
+  -> RecordOf g ys
+conduct = educt
 
 
--- |Set union over type lists.
-type family Union xs ys where
-    Union '[] ys = ys
-    Union (x ': xs) ys = Insert x (Union xs ys)
+-- | Specialized version of @educt@ where @f@ = @Maybe@.
+-- @xs@ are mapped while de-functorized.
+-- Thus, output type is infered by itself.
 
-conduct :: forall f xs ys. Forall (NullableElemF xs f) ys => Record xs -> RecordOf (Nullable f) ys
-conduct r =
-  htabulateFor (Proxy @(NullableElemF xs f)) $ \m -> Field $ elemFMay m r
-
-
--- | This instance catches all cases and type error happens when `f` is not consistent.
-
--- instance ( Associate (AssocKey kv) (f (AssocValue kv)) xs
---          ) => NullableElemF xs f kv where
---   -- elemFMay _ r = Nullable $ r ^? itemAssoc (Proxy @(AssocKey kv))
---   elemFMay _ r = Nullable Nothing
+induct :: (Generate xs, Include xs ys) => Record xs -> (Field Maybe) :* ys -> Record xs
+induct xs ys = hzipWith f xs $ wrench ys
+  where
+    f :: Field Identity a -> Nullable (Field Maybe) a -> Field Identity a
+    f x y = case getField <$> getNullable y of
+      (Just (Just y')) -> Field $ Identity y'
+      _                -> x
 
 
--- | The following is field lookup approach, it calls `FindAssoc` and
--- dispatchs by its result with type class.
--- Could not find out how to resolve the ambiguity of `pos`.
+-- * Transform type class and instances
 
--- instance ( LookupAssoc k pos (Record xs) (f v)
---          , pos ~ (FindAssoc 0 k xs)
---          , k ~ (AssocKey kv)
---          , v ~ (AssocValue kv)
---          ) => NullableElemF xs f kv where
---   elemFMay _ r = Nullable $ lookupAssoc @k @pos @_ @(f v) (Proxy @k) r
+class Transform f g where
+  trans :: f x -> g x
+
+instance Transform a a where
+  trans = id
+
+instance Transform Required (Nullable Required) where
+  trans x = Nullable $ Just x
+
+instance Transform Optional (Nullable Required) where
+  trans _ = Nullable Nothing
+
+instance Transform Required (Nullable Optional) where
+  trans _ = Nullable Nothing
+
+instance Transform Optional (Nullable Optional) where
+  trans x = Nullable $ Just x
+
+instance Transform Required Maybe where
+  trans (Required x) = Just x
+
+instance Transform Optional Maybe where
+  trans (Optional x) = x
 
 
--- class LookupAssoc (k :: *) (pos :: [Assoc Nat v]) r a where
---   lookupAssoc :: proxy k -> r -> Maybe a
+-- * TransformField type class and instance
+-- This is used by @educt@.
+-- Since constraint is required, this needs to be a type class, even though
+-- the instance is fully parametarized.
 
--- instance LookupAssoc k '[] r a where
---   lookupAssoc _ r = Nothing
+class TransformField g xs kv where
+  elemF :: proxy kv -> Record xs -> g (AssocValue kv)
 
--- instance (Associate k v xs) => LookupAssoc k '[n :> v] (Record xs) v where
---   lookupAssoc _ r = r ^? itemAt (association @k @v @xs)
+instance
+  ( Transform f g
+  , Associate k (f v) xs
+  , k ~ AssocKey kv
+  , v ~ AssocValue kv
+  )
+  => TransformField g xs kv where
+  elemF _ r = trans $ r ^. itemAssoc (Proxy @k)
 
--- instance LookupAssoc k (nv ': nvs) r a where
---   lookupAssoc _ r = Nothing
 
+-- * DefunctorAssoc type family
+-- Type level defunctorizer which works on a list of @Assoc@s with functor values.
 
-
--- | The following is trying to overlap on "valid" cases.
--- This does not work because when instance is chosen, the costraints are already chosen.
-
--- instance {-# OVERLAPS #-} (Associate (AssocKey kv) (Required (AssocValue kv)) xs) => NullableElemF xs Required kv where
---   elemFMay _ r = Nullable $ r ^? itemAssoc (Proxy @(AssocKey kv))
--- instance {-# OVERLAPS #-} (Associate (AssocKey kv) (Optional (AssocValue kv)) xs) => NullableElemF xs Optional kv where
---   elemFMay _ r = Nullable $ r ^? itemAssoc (Proxy @(AssocKey kv))
+type family DefunctorAssoc (kvs :: [Assoc k v]) :: [Assoc k *]
+type instance DefunctorAssoc '[] = '[]
+type instance DefunctorAssoc ((k >: f x) ': kvs) = (k >: x) ': DefunctorAssoc kvs
