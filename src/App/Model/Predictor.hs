@@ -3,7 +3,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE TemplateHaskell #-}
-module Model.Predictor
+module App.Model.Predictor
   (
   -- * Data types
     Predictor

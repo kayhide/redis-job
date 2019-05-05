@@ -3,14 +3,14 @@ module App.Handler.Predictors where
 import ClassyPrelude
 
 import App.Api.Config (AppM)
+import App.Model.Predictor (Predictor, PredictorId)
+import qualified App.Model.Predictor as Predictor
 import Configurable (ToConfig)
 import Control.Lens ((%~), (&))
 import Data.Default (Default (..))
 import Data.Extensible
 import Database.Selda ()
 import Model.Conduct (Optional (..), Required (..), conduct, induct)
-import Model.Predictor (Predictor, PredictorId)
-import qualified Model.Predictor as Predictor
 import qualified Plugin.Db as Db
 import Servant ((:<|>) (..), (:>), Capture, Get, JSON, Patch, Post, ReqBody,
                 ServerT)
@@ -23,6 +23,7 @@ type API
   :<|> Capture "predictor_id" PredictorId :> Get '[JSON] Predictor
   :<|> Capture "predictor_id" PredictorId :> ReqBody '[JSON] UpdateParams :> Patch '[JSON] Predictor
   :<|> Capture "predictor_id" PredictorId :> DeleteNoContent '[JSON] ()
+
 
 handlers
   :: ( Member xs Db.Config
